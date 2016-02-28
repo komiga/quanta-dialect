@@ -6,7 +6,7 @@ local tool = Tool("tracker", {}, {}, [=[
 tracker [command]
   tracker tool
 
-  <date-or-range> : [ [-m] [-y] <date> | <date-range> | all | year | month | previous | yesterday | active | now ]
+  <date-or-range> : [ [-m] [-y] <date> | <date-range> | all | year | month | previous | active | now ]
 
   precede a single date with -m to expand to the date's month
   precede a single date with -y to expand to the date's year

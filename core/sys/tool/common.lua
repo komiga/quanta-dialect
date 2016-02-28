@@ -62,14 +62,14 @@ function parse_dates(dates, options, params, read_modifier)
 
 	local t_now = T()
 	T.set_date_now(t_now)
-	local t_yesterday = T(t_now)
-	T.sub(t_yesterday, T.SECS_PER_DAY)
+	local t_previous = T(Vessel.tracker_active_date())
+	T.sub(t_previous, T.SECS_PER_DAY)
 
 	local function fixup_date(obj)
 		if O.is_identifier(obj) then
 			local str = O.identifier(obj)
-			if str == "yesterday" then
-				return T(t_yesterday)
+			if str == "previous" then
+				return T(t_previous)
 			elseif str == "active" then
 				return Vessel.tracker_active_date()
 			elseif str == "now" then
