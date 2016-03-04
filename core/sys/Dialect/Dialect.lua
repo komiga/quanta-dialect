@@ -37,14 +37,9 @@ function M.make_action(mod, name, setup)
 
 	function class:to_object(action, obj)
 		if self.description and #self.description > 0 then
-			local d = O.push_child(obj)
-			O.set_string(d, self.description)
+			O.set_string(O.push_child(obj), self.description)
 		end
 	end
-
-	--[[function class:compare_equal(other)
-		return false
-	end--]]
 
 	class.t_body = Match.Tree()
 	class.t_head_tags = Match.Tree({
@@ -63,14 +58,14 @@ function M.make_action(mod, name, setup)
 	function class.setup_sub(fallback)
 		class.sub_action_spec = Prop.Specializer()
 		class.sub_action_spec_fallback = fallback
-		function class:read_action(context, parent, action, obj)
-			return class.sub_action_spec:read(context, parent, action, obj, class.sub_action_spec_fallback)
+		function class:read_action(context, action, obj)
+			return class.sub_action_spec:read(context, self, action, obj, class.sub_action_spec_fallback)
 		end
 	end
-	U.assert(not class.read_action)
 
 	setup(class)
 	class.setup_sub = nil
+
 	class.t_body:build()
 	class.t_head_tags:build()
 	class.t_head:build()
