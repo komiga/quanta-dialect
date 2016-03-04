@@ -1,4 +1,6 @@
 
+package.path = package.path .. [[;./?/?.lua]]
+
 local U = require "togo.utility"
 local Vessel = require "Quanta.Vessel"
 local Tracker = require "Quanta.Tracker"
