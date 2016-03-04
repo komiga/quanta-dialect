@@ -4,9 +4,12 @@ local Vessel = require "Quanta.Vessel"
 local Tracker = require "Quanta.Tracker"
 local Director = require "Quanta.Director"
 
-Vessel.setup_config(function()
-	director = Director()
-	director:register_action("ETODO", Tracker.PlaceholderAction)
-end)
+local Dialect = require "Dialect"
+require "Dialect.Bio.Nutrition"
 
 require "tool/tracker"
+
+Vessel.setup_config(function()
+	director = Director()
+	Dialect.register_actions(director)
+end)
