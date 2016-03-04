@@ -85,9 +85,9 @@ local function print_stats(stats, sort_func)
 		"  %4d action classes\n" ..
 		"  %4d entries  %3.4f entries/day\n" ..
 		"  %4d actions    %0.4f actions/entry\n" ..
-		"-------------------------------------\n" ..
-		"   num  average : total      class\n" ..
-		"-------------------------------------",
+		"---------------------------------------\n" ..
+		"   num    average : total      class   \n" ..
+		"---------------------------------------",
 		stats.num_days,
 		#stats.action_sums_ordered,
 
