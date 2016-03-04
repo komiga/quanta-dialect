@@ -13,34 +13,60 @@ require "tool/common"
 local function make_stats()
 	return {
 		num_days = 0,
+		num_attachments = 0,
 		num_entries = 0,
 		num_actions = 0,
-		action_sums = {},
-		action_sums_ordered = {},
+		attachments = {},
+		attachments_ordered = {},
+		actions = {},
+		actions_ordered = {},
 	}
 end
 
+local function accumulate_attachment(stats, id, id_hash, num)
+	local node = stats.attachments[id_hash]
+	if not node then
+		node = {
+			id = id,
+			num = 0,
+		}
+		stats.attachments[id_hash] = node
+		table.insert(stats.attachments_ordered, node)
+	end
+	node.num = node.num + num
+	stats.num_attachments = stats.num_attachments + num
+end
+
 local function accumulate_action(stats, id, id_hash, num, duration)
-	local id_sum = stats.action_sums[id_hash]
-	if not id_sum then
-		id_sum = {
+	local node = stats.actions[id_hash]
+	if not node then
+		node = {
 			id = id,
 			num = 0,
 			duration = 0,
 		}
-		stats.action_sums[id_hash] = id_sum
-		table.insert(stats.action_sums_ordered, id_sum)
+		stats.actions[id_hash] = node
+		table.insert(stats.actions_ordered, node)
 	end
-	id_sum.num = id_sum.num + num
-	id_sum.duration = id_sum.duration + duration
+	node.num = node.num + num
+	node.duration = node.duration + duration
+	stats.num_actions = stats.num_actions + num
 end
 
-local function accumulate(tracker, total, selection)
+local function accumulate(tracker, total, action_selection)
 	local stats = make_stats()
+	stats.num_days = 1
+	total.num_days = total.num_days + 1
+	stats.num_entries = #tracker.entries
+	total.num_entries = total.num_entries + stats.num_entries
+
+	for _, attachment in ipairs(tracker.attachments) do
+		accumulate_attachment(stats, attachment.id, attachment.id_hash, 1)
+	end
 	for _, entry in ipairs(tracker.entries) do
 		local entry_duration = T.value(entry.duration)
 		for i, action in ipairs(entry.actions) do
-			if not selection or selection[action.id_hash] then
+			if not action_selection or action_selection[action.id_hash] then
 				local duration
 				if i ~= entry.primary_action then
 					duration = math.ceil((entry_duration * 0.25) / #entry.actions)
@@ -50,46 +76,52 @@ local function accumulate(tracker, total, selection)
 					duration = entry_duration
 				end
 				accumulate_action(stats, action.id, action.id_hash, 1, duration)
-				stats.num_actions = stats.num_actions + 1
 			end
 		end
-		stats.num_entries = stats.num_entries + 1
 	end
-	for id_hash, id_sum in pairs(stats.action_sums) do
-		accumulate_action(total, id_sum.id, id_hash, id_sum.num, id_sum.duration)
-	end
-	stats.num_days = 1
 
-	total.num_actions = total.num_actions + stats.num_actions
-	total.num_entries = total.num_entries + stats.num_entries
-	total.num_days = total.num_days + 1
+	for id_hash, node in pairs(stats.attachments) do
+		accumulate_attachment(total, node.id, id_hash, node.num)
+	end
+	for id_hash, node in pairs(stats.actions) do
+		accumulate_action(total, node.id, id_hash, node.num, node.duration)
+	end
 	return stats
 end
 
-local function action_sum_order_duration(x, y)
-	return x.duration > y.duration
-end
-
-local function action_sum_order_duration_average(x, y)
-	return (x.duration / x.num) > (y.duration / y.num)
-end
-
-local function action_sum_order_num(x, y)
+local function node_order_num(x, y)
 	return x.num > y.num
 end
 
-local function print_stats(stats, sort_func)
-	table.sort(stats.action_sums_ordered, sort_func)
+local function attachment_order_id(x, y)
+	return x.id < y.id
+end
+
+local function action_order_duration(x, y)
+	return x.duration > y.duration
+end
+
+local function action_order_duration_average(x, y)
+	return (x.duration / x.num) > (y.duration / y.num)
+end
+
+local function print_stats(stats, action_sort_func)
+	table.sort(stats.attachments_ordered, attachment_order_id)
+	table.sort(stats.actions_ordered, action_sort_func)
+
 	Tool.log(
 		"  %4d days\n" ..
+		"  %4d attachment classes\n" ..
 		"  %4d action classes\n" ..
-		"  %4d entries  %3.4f entries/day\n" ..
-		"  %4d actions    %0.4f actions/entry\n" ..
-		"---------------------------------------\n" ..
-		"   num    average : total      class   \n" ..
-		"---------------------------------------",
+		"  %4d attachments  %.4f attachments/day\n" ..
+		"  %4d entries      %.4f entries/day\n" ..
+		"  %4d actions      %.4f actions/entry",
 		stats.num_days,
-		#stats.action_sums_ordered,
+		#stats.attachments_ordered,
+		#stats.actions_ordered,
+
+		stats.num_attachments,
+		stats.num_attachments / stats.num_days,
 
 		stats.num_entries,
 		stats.num_entries / stats.num_days,
@@ -98,6 +130,26 @@ local function print_stats(stats, sort_func)
 		stats.num_actions / stats.num_entries
 	)
 
+	Tool.log(
+		"\n" ..
+		"------------ attachments -------------\n" ..
+		"   num  class                         \n" ..
+		"--------------------------------------"
+	)
+	for _, node in ipairs(stats.attachments_ordered) do
+		Tool.log(
+			"  %4d  %s",
+			node.num,
+			node.id
+		)
+	end
+
+	Tool.log(
+		"\n" ..
+		"-------------- actions ---------------\n" ..
+		"   num    average : total      class  \n" ..
+		"--------------------------------------"
+	)
 	local function hour_part(h)
 		if h > 0 then
 			return string.format("%4d:", h)
@@ -106,22 +158,22 @@ local function print_stats(stats, sort_func)
 	end
 	local ht, mt, st
 	local ha, ma, sa
-	for _, id_sum in ipairs(stats.action_sums_ordered) do
-		sa = math.ceil(id_sum.duration / id_sum.num)
+	for _, node in ipairs(stats.actions_ordered) do
+		sa = math.ceil(node.duration / node.num)
 		ha = math.floor(sa / T.SECS_PER_HOUR)
 		ma = math.floor((sa % T.SECS_PER_HOUR) / T.SECS_PER_MINUTE)
 		sa = sa % T.SECS_PER_MINUTE
 
-		st = id_sum.duration
+		st = node.duration
 		ht = math.floor(st / T.SECS_PER_HOUR)
 		mt = math.floor((st % T.SECS_PER_HOUR) / T.SECS_PER_MINUTE)
 		st = st % T.SECS_PER_MINUTE
 		Tool.log(
 			"  %4d %s%02d:%02d : %s%02d:%02d %s",
-			id_sum.num,
+			node.num,
 			hour_part(ha, nil, true), ma, sa,
 			hour_part(ht, nil, true), mt, st,
-			id_sum.id
+			node.id
 		)
 	end
 end
@@ -130,8 +182,8 @@ local command = Tool("stats", {}, {}, [=[
 stats [-t] [-a] [-i] [ <date-or-range> [...] ]
   calculate basic tracker statistics
 
-  -t: sort by total duration
-  -a: sort by average duration
+  -t: sort actions by total duration
+  -a: sort actions by average duration
   -i: show individual tracker statistics
 
   default: active
@@ -162,11 +214,11 @@ function(self, parent, options, params)
 		return true
 	end
 
-	local sort_func = action_sum_order_num
+	local sort_func = node_order_num
 	if sort_by_duration then
-		sort_func = action_sum_order_duration
+		sort_func = action_order_duration
 	elseif sort_by_duration_average then
-		sort_func = action_sum_order_duration_average
+		sort_func = action_order_duration_average
 	end
 
 	local tracker = Tracker()
@@ -178,16 +230,16 @@ function(self, parent, options, params)
 			return Tool.log_error(msg)
 		end
 
-		local stats = accumulate(tracker, total)
+		local stats = accumulate(tracker, total, nil)
 		if print_individual then
-			Tool.log("== %s ==", date_str)
+			Tool.log("---------- %s -----------", date_str)
 			print_stats(stats, sort_func)
 			print()
 		end
 	end
 
 	if not print_individual or #dates > 1 then
-		Tool.log("== total ==")
+		Tool.log("--------------- total ----------------")
 		print_stats(total, sort_func)
 	end
 end)
