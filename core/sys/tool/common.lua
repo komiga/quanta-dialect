@@ -24,7 +24,7 @@ function load_tracker(tracker, t, date_str)
 			return false, string.format("%s\n!! %s is malformed !!", msg, date_str), source_line
 		end
 	else
-		return false, string.format("failed to read tracker: %s", t.path), source_line
+		return false, string.format("failed to read tracker: %s", t.path)
 	end
 end
 
