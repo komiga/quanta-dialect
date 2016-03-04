@@ -7,6 +7,7 @@ local Tracker = require "Quanta.Tracker"
 local Director = require "Quanta.Director"
 
 local Dialect = require "Dialect"
+require "Dialect.Attachment.Units"
 require "Dialect.Bio.Nutrition"
 
 require "tool/tracker"
