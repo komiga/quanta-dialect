@@ -8,6 +8,17 @@ local M = U.module(...)
 
 M.actions = {}
 
+function M.add_action(name, class)
+	U.assert(not M.actions[name])
+	M.actions[name] = class
+end
+
+function M.register_dialect(director)
+	for name, action in pairs(M.actions) do
+		director:register_action(name, action)
+	end
+end
+
 function M.make_action(mod, name, setup)
 	U.type_assert(mod, "table")
 	U.type_assert(name, "string")
@@ -67,17 +78,6 @@ function M.make_action(mod, name, setup)
 	Dialect.add_action(class.name, class)
 
 	return class
-end
-
-function M.add_action(name, class)
-	U.assert(not M.actions[name])
-	M.actions[name] = class
-end
-
-function M.register_actions(director)
-	for name, action in pairs(M.actions) do
-		director:register_action(name, action)
-	end
 end
 
 M.add_action("ETODO", Tracker.PlaceholderAction)

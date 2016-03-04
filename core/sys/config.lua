@@ -13,5 +13,5 @@ require "tool/tracker"
 
 Vessel.setup_config(function()
 	director = Director()
-	Dialect.register_actions(director)
+	Dialect.register_dialect(director)
 end)
