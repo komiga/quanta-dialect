@@ -3,11 +3,13 @@ local U = require "togo.utility"
 local O = require "Quanta.Object"
 local Match = require "Quanta.Match"
 local Prop = require "Quanta.Prop"
+local Entity = require "Quanta.Entity"
 local Tracker = require "Quanta.Tracker"
 local M = U.module(...)
 
 M.actions = {}
 M.attachments = {}
+M.entities = {}
 
 function M.add_action(name, class)
 	U.assert(not M.actions[name])
@@ -19,12 +21,20 @@ function M.add_attachment(name, class)
 	M.attachments[name] = class
 end
 
+function M.add_entity(name, class)
+	U.assert(not M.entities[name])
+	M.entities[name] = class
+end
+
 function M.register_dialect(director)
 	for name, class in pairs(M.attachments) do
 		director:register_attachment(name, class)
 	end
 	for name, class in pairs(M.actions) do
 		director:register_action(name, class)
+	end
+	for name, class in pairs(M.entities) do
+		director:register_entity(name, class)
 	end
 end
 
@@ -127,6 +137,62 @@ function M.make_attachment(mod, name, setup)
 	class.t_head:build()
 
 	Dialect.add_attachment(class.name, class)
+
+	return class
+end
+
+function M.make_entity(mod, name, setup)
+	U.type_assert(mod, "table")
+	U.type_assert(name, "string")
+	U.type_assert(setup, "function")
+
+	local class = U.class(mod[name])
+	mod[name] = class
+	class.name = name
+
+	class.Source = U.class(class.Source)
+
+	function class.Source:__init(source)
+	end
+
+	function class:__init()
+	end
+
+	function class:from_object(context, parent, entity, obj)
+		return context:consume(class.t_head, obj, entity)
+	end
+
+	class.Source.t_body = Match.Tree({
+	Entity.Source.t_body,
+	})
+
+	class.t_body = Match.Tree({
+	Entity.t_entity_body,
+	Entity.specialize_sources(class.Source.t_body),
+	})
+
+	class.t_head_tags = Match.Tree()
+	class.t_head = Match.Tree({
+	Match.Pattern{
+		name = Match.Any,
+		vtype = Match.Any,
+		tags = class.t_head_tags,
+		children = class.t_body,
+	},
+	})
+
+	setup(class)
+
+	class.t_body:add({
+	Entity.specialize_source_fallthrough(class.Source.t_body),
+	})
+
+	class.Source.t_body:build()
+	class.t_body:build()
+	class.t_head_tags:build()
+	class.t_head:build()
+
+	Dialect.add_entity(class.name, class)
 
 	return class
 end
