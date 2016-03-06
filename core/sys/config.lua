@@ -1,5 +1,5 @@
 
-package.path = package.path .. [[;./?/?.lua]]
+package.path = package.path .. [[;./?/module.lua]]
 
 local U = require "togo.utility"
 local Vessel = require "Quanta.Vessel"
@@ -14,7 +14,7 @@ require "Dialect.Entity.Nutrition"
 require "Dialect.Attachment.Units"
 require "Dialect.Bio.Nutrition"
 
-require "tool/tracker"
+require "Tool.Tracker"
 
 Vessel.setup_config(function()
 	director = Director()

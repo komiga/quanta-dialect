@@ -16,8 +16,8 @@ function(self, parent, options, params)
 end)
 
 tool:add_commands({
-	require("tool/tracker_validate"),
-	require("tool/tracker_stats"),
+	require("Tool.Tracker.Validate"),
+	require("Tool.Tracker.Stats"),
 })
 
 Tool.add_tools(tool)

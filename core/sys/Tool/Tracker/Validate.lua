@@ -8,7 +8,7 @@ local Vessel = require "Quanta.Vessel"
 local Tracker = require "Quanta.Tracker"
 local Tool = require "Quanta.Tool"
 
-require "tool/common"
+require "Tool.common"
 
 local command = Tool("validate", {}, {}, [=[
 validate [-h] [-e] [-p] [-o] [ <date-or-range> [...] ]

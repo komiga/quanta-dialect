@@ -8,7 +8,7 @@ local Vessel = require "Quanta.Vessel"
 local Tracker = require "Quanta.Tracker"
 local Tool = require "Quanta.Tool"
 
-require "tool/common"
+require "Tool.common"
 
 local function make_stats()
 	return {
