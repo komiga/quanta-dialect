@@ -3,10 +3,14 @@ package.path = package.path .. [[;./?/?.lua]]
 
 local U = require "togo.utility"
 local Vessel = require "Quanta.Vessel"
-local Tracker = require "Quanta.Tracker"
 local Director = require "Quanta.Director"
 
 local Dialect = require "Dialect"
+
+-- entities
+require "Dialect.Entity.Nutrition"
+
+-- tracker
 require "Dialect.Attachment.Units"
 require "Dialect.Bio.Nutrition"
 
