@@ -14,6 +14,8 @@ require "Dialect.Entity.Nutrition"
 require "Dialect.Attachment.Units"
 require "Dialect.Bio.Nutrition"
 
+-- tools
+require "Tool.Entity"
 require "Tool.Tracker"
 
 Vessel.setup_config(function()
