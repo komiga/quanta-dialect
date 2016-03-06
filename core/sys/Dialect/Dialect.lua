@@ -20,11 +20,11 @@ function M.add_attachment(name, class)
 end
 
 function M.register_dialect(director)
-	for name, attachment in pairs(M.attachments) do
-		director:register_attachment(name, attachment)
+	for name, class in pairs(M.attachments) do
+		director:register_attachment(name, class)
 	end
-	for name, action in pairs(M.actions) do
-		director:register_action(name, action)
+	for name, class in pairs(M.actions) do
+		director:register_action(name, class)
 	end
 end
 
@@ -61,6 +61,7 @@ function M.make_action(mod, name, setup)
 		vtype = Match.Any,
 		tags = class.t_head_tags,
 		children = class.t_body,
+		quantity = Match.Any,
 	},
 	})
 
@@ -100,7 +101,7 @@ function M.make_attachment(mod, name, setup)
 		return context:consume(class.t_head, obj, self)
 	end
 
-	function class:to_object(action, obj)
+	function class:to_object(attachment, obj)
 	end
 
 	class.t_body = Match.Tree()
@@ -111,6 +112,7 @@ function M.make_attachment(mod, name, setup)
 		vtype = Match.Any,
 		tags = class.t_head_tags,
 		children = class.t_body,
+		quantity = Match.Any,
 		acceptor = function(context, self, obj)
 			return class.acceptor(context, self, obj)
 		end,
