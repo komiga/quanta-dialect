@@ -7,6 +7,16 @@ local O = require "Quanta.Object"
 local Vessel = require "Quanta.Vessel"
 local Tool = require "Quanta.Tool"
 
+local entity_type_shorthands = {"T", "C", "U"}
+
+function entity_type_shorthand(entity)
+	return entity_type_shorthands[entity.type]
+end
+
+function entity_class_name(entity)
+	return entity.id or "Generic"
+end
+
 function date_to_string(date)
 	local obj = O.create()
 	O.set_time_date(obj, date)
