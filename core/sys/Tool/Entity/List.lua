@@ -122,7 +122,8 @@ local function print_list(stats, root)
 
 		table.insert(parts, e.name)
 		Tool.log(
-			"  %s %-12s  %s",
+			" %2d %s %-12s  %s",
+			#e.sources,
 			entity_type_shorthand(e),
 			e.id or "",
 			table.concat(parts, '.')
