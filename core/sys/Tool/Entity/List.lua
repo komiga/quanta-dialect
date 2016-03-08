@@ -21,6 +21,7 @@ local function make_stats()
 		num_by_type = {0, 0, 0},
 		num_specialized = 0,
 		num_sources = 0,
+		num_sub_sources = 0,
 		num_total = 0,
 	}
 end
@@ -30,9 +31,10 @@ local function do_stats(stats, e)
 	if e:is_specialized() then
 		stats.num_specialized = stats.num_specialized + 1
 	end
-	for _, _ in ipairs(e.sources) do
-		stats.num_sources = stats.num_sources + 1
+	for _, source in ipairs(e.generic.sources) do
+		stats.num_sub_sources = stats.num_sub_sources + #source.sources
 	end
+	stats.num_sources = #e.generic.sources
 	stats.num_total = stats.num_total + 1
 end
 
@@ -42,6 +44,7 @@ local function print_stats(stats)
 	Tool.log(" %4d categories", stats.num_by_type[Entity.Type.category])
 	Tool.log(" %4d things", stats.num_by_type[Entity.Type.thing])
 	Tool.log("    %4d sources", stats.num_sources)
+	Tool.log("    %4d sub-sources", stats.num_sub_sources)
 	Tool.log(" %4d total", stats.num_total)
 	Tool.log("    %4d specialized", stats.num_specialized)
 	Tool.log("    %4d generic", stats.num_total - stats.num_specialized)
@@ -63,7 +66,6 @@ local function describe_source(s)
 		non_empty_string_or_nil(s.description) or
 		non_empty_string_or_nil(s.label) or
 		describe_author(s.author[1]) or
-		describe_author(s.vendor[0]) or
 		describe_author(s.vendor[1])
 	)
 end
@@ -80,10 +82,10 @@ local function print_hierarchy(stats, root)
 			" %s %s \"%s\"",
 			entity_type_shorthand(e),
 			left_column(e.name, i, 68),
-			describe_source(e.sources[0]) or ""
+			describe_source(e.generic) or ""
 		)
-		if #e.sources > 0 then
-			for n, s in ipairs(e.sources) do
+		if e:any_sources() then
+			for n, s in ipairs(e.generic.sources) do
 				Tool.log(
 					"  S %s \"%s\"",
 					left_column(tostring(n), i, 67),
@@ -122,8 +124,8 @@ local function print_list(stats, root)
 
 		table.insert(parts, e.name)
 		Tool.log(
-			" %2d %s %-12s  %s",
-			#e.sources,
+			" %2s %s %-12s  %s",
+			#e.generic.sources > 0 and tostring(#e.generic.sources) or "",
 			entity_type_shorthand(e),
 			e.id or "",
 			table.concat(parts, '.')
@@ -135,6 +137,7 @@ local function print_list(stats, root)
 		table.remove(parts)
 	end
 
+	do_stats(stats, root)
 	for _, c in pairs(root.children) do
 		do_branch(c)
 	end
