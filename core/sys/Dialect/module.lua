@@ -162,8 +162,11 @@ function M.make_entity(mod, name, setup)
 		return context:consume(class.t_head, obj, entity)
 	end
 
-	class.Source.t_body = Match.Tree({
+	class.Source.Source = class.Source
+	class.Source.t_body = Match.Tree()
+	class.Source.t_body:add({
 	Entity.Source.t_body,
+	Entity.specialize_sub_sources(class.Source.t_body),
 	})
 
 	class.t_body = Match.Tree({
@@ -184,7 +187,7 @@ function M.make_entity(mod, name, setup)
 	setup(class)
 
 	class.t_body:add({
-	Entity.specialize_source_fallthrough(class.Source.t_body),
+	Entity.specialize_generic_fallthrough(class.Source.t_body),
 	})
 
 	class.Source.t_body:build()
