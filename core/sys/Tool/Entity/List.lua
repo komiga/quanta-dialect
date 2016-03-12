@@ -34,7 +34,7 @@ local function do_stats(stats, e)
 	for _, source in ipairs(e.generic.sources) do
 		stats.num_sub_sources = stats.num_sub_sources + #source.sources
 	end
-	stats.num_sources = #e.generic.sources
+	stats.num_sources = stats.num_sources + #e.generic.sources
 	stats.num_total = stats.num_total + 1
 end
 
