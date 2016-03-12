@@ -81,39 +81,38 @@ local function print_hierarchy(stats, root)
 		Tool.log(
 			" %s %s \"%s\"",
 			entity_type_shorthand(e),
-			left_column(e.name, i, 68),
+			left_column(e.name, i, 56),
 			describe_source(e.generic) or ""
 		)
 		if e:any_sources() then
 			for n, s in ipairs(e.generic.sources) do
 				Tool.log(
 					"  S %s \"%s\"",
-					left_column(tostring(n), i, 67),
+					left_column(tostring(n), i, 55),
 					describe_source(s) or ""
 				)
 			end
 		end
-		i = i + 1
 
+		i = i + 1
 		for _, s in pairs(e.children) do
 			do_branch(s, i)
 		end
 	end
-	do_branch(root, 0)
-end
-
-local function print_list(stats, root)
-	local function left_column(left, i, p)
-		return U.pad_left(U.pad_right(left, #left + i), p)
-	end
 
 	Tool.log(
-		"> %s %-12s  %s",
+		"%s %-12s  %s",
 		entity_type_shorthand(root),
 		root.id or "",
 		root.parent and root:ref() or root.name
 	)
+	do_stats(stats, root)
+	for _, c in pairs(root.children) do
+		do_branch(c, 0)
+	end
+end
 
+local function print_list(stats, root)
 	local parts = {}
 	if root.parent then
 		table.insert(parts, root:ref())
@@ -137,6 +136,12 @@ local function print_list(stats, root)
 		table.remove(parts)
 	end
 
+	Tool.log(
+		"%s %-12s  %s",
+		entity_type_shorthand(root),
+		root.id or "",
+		root.parent and root:ref() or root.name
+	)
 	do_stats(stats, root)
 	for _, c in pairs(root.children) do
 		do_branch(c)
