@@ -2,7 +2,6 @@
 local U = require "togo.utility"
 local O = require "Quanta.Object"
 local Match = require "Quanta.Match"
-local Composition = require "Quanta.Composition"
 local Entity = require "Quanta.Entity"
 
 local Dialect = require "Dialect"
@@ -14,6 +13,8 @@ function class.Source:__init(source)
 	self.nutrition = {}
 end
 
+-- TODO
+
 class.Source.t_body:add({
 Match.Pattern{
 	name = "nutrition",
@@ -23,7 +24,7 @@ Match.Pattern{
 
 end)
 
-Dialect.add_entity("Food", Nutrient)
-Dialect.add_entity("Drug", Nutrient)
+Dialect.director:register_entity("Food", Nutrient)
+Dialect.director:register_entity("Drug", Nutrient)
 
 return M

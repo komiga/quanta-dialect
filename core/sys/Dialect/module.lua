@@ -5,38 +5,12 @@ local Match = require "Quanta.Match"
 local Prop = require "Quanta.Prop"
 local Entity = require "Quanta.Entity"
 local Tracker = require "Quanta.Tracker"
+local Director = require "Quanta.Director"
 local M = U.module(...)
 
-M.actions = {}
-M.attachments = {}
-M.entities = {}
+M.director = Director()
 
-function M.add_action(name, class)
-	U.assert(not M.actions[name])
-	M.actions[name] = class
-end
-
-function M.add_attachment(name, class)
-	U.assert(not M.attachments[name])
-	M.attachments[name] = class
-end
-
-function M.add_entity(name, class)
-	U.assert(not M.entities[name])
-	M.entities[name] = class
-end
-
-function M.register_dialect(director)
-	for name, class in pairs(M.attachments) do
-		director:register_attachment(name, class)
-	end
-	for name, class in pairs(M.actions) do
-		director:register_action(name, class)
-	end
-	for name, class in pairs(M.entities) do
-		director:register_entity(name, class)
-	end
-end
+M.director:register_action("ETODO", Tracker.PlaceholderAction)
 
 function M.make_action(mod, name, setup)
 	U.type_assert(mod, "table")
@@ -90,7 +64,7 @@ function M.make_action(mod, name, setup)
 	class.t_head_tags:build()
 	class.t_head:build()
 
-	Dialect.add_action(class.name, class)
+	M.director:register_action(class.name, class)
 
 	return class
 end
@@ -136,7 +110,7 @@ function M.make_attachment(mod, name, setup)
 	class.t_head_tags:build()
 	class.t_head:build()
 
-	Dialect.add_attachment(class.name, class)
+	M.director:register_attachment(class.name, class)
 
 	return class
 end
@@ -195,11 +169,9 @@ function M.make_entity(mod, name, setup)
 	class.t_head_tags:build()
 	class.t_head:build()
 
-	Dialect.add_entity(class.name, class)
+	M.director:register_entity(class.name, class)
 
 	return class
 end
-
-M.add_action("ETODO", Tracker.PlaceholderAction)
 
 return M

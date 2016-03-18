@@ -2,7 +2,7 @@
 local U = require "togo.utility"
 local O = require "Quanta.Object"
 local Match = require "Quanta.Match"
-local Composition = require "Quanta.Composition"
+local Unit = require "Quanta.Unit"
 
 local Dialect = require "Dialect"
 local M = U.module(...)
@@ -12,7 +12,7 @@ Dialect.make_action(M, "Eat", function(class)
 function class:__init(group, binge, composition)
 	self.group = U.type_assert(group, "string", true) or nil
 	self.binge = U.type_assert(binge, "boolean", true) or false
-	self.composition = U.type_assert(composition, Composition, true) or Composition()
+	self.composition = U.type_assert(composition, Unit, true) or Unit.Composition()
 end
 
 function class:to_object(action, obj)
@@ -40,7 +40,7 @@ Match.Pattern{
 },
 Match.Pattern{
 	name = {"items", "food"},
-	children = Composition.t_body,
+	children = Unit.t_composition_body,
 	acceptor = function(context, self, obj)
 		return self.composition
 	end,

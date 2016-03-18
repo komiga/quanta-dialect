@@ -19,6 +19,5 @@ require "Tool.Entity"
 require "Tool.Tracker"
 
 Vessel.setup_config(function()
-	director = Director()
-	Dialect.register_dialect(director)
+	director = Dialect.director
 end)

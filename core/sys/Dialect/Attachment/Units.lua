@@ -29,9 +29,9 @@ end
 
 class.t_body:add({
 Match.Pattern{
-	layer = Unit.p_head,
+	layer = Unit.p_definition_head,
 	acceptor = function(context, self, obj)
-		return Unit()
+		return Unit.Definition()
 	end,
 	post_branch_pre = function(context, unit, obj)
 		local self = context:value(1)
