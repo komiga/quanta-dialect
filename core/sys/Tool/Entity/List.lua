@@ -91,6 +91,13 @@ local function print_hierarchy(stats, root)
 					left_column(tostring(n), i, 55),
 					describe_source(s) or ""
 				)
+				for sub_n, sub_s in ipairs(s.sources) do
+					Tool.log(
+						"   S %s \"%s\"",
+						left_column(tostring(sub_n), i, 54),
+						describe_source(sub_s) or ""
+					)
+				end
 			end
 		end
 
