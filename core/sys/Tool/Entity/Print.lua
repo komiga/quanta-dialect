@@ -17,7 +17,7 @@ local function print_entity(entity)
 
 	local text = O.write_text_string(obj, true)
 	text = string.gsub(text, "\t", "    ")
-	print(text)
+	Tool.log("%s", text)
 end
 
 local command = Tool("print", options, {}, [=[

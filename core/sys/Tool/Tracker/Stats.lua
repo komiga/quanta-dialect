@@ -234,7 +234,7 @@ function(self, parent, options, params)
 		if print_individual then
 			Tool.log("---------- %s -----------", date_str)
 			print_stats(stats, sort_func)
-			print()
+			Tool.log("")
 		end
 	end
 

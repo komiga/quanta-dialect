@@ -56,9 +56,8 @@ function(self, parent, options, params)
 		local date_str = date_to_string(t.date)
 		local success, msg, source_line = load_tracker(tracker, t, date_str)
 		if print_always or (not success and print_error) then
-			print()
 			tracker:to_object(obj)
-			print(O.write_text_string(obj, true))
+			Tool.log("\n%s", O.write_text_string(obj, true))
 		end
 		if success then
 			Tool.log("%s is valid", date_str)
