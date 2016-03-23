@@ -38,6 +38,10 @@ function load_tracker(tracker, t, date_str)
 	end
 end
 
+function open_tracker_file_in_editor(path, source_line)
+	os.execute(string.format([[sbt2 "%s:%d"]], path, source_line or 0))
+end
+
 function parse_dates(dates, options, params, read_modifier)
 	if #params == 0 then
 		table.insert(params, {value = "active"})

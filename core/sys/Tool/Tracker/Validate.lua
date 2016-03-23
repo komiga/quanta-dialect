@@ -64,7 +64,7 @@ function(self, parent, options, params)
 		else
 			Tool.log_error("%s", msg)
 			if open_on_error then
-				os.execute(string.format([[sbt2 "%s:%d"]], t.path, source_line or 0))
+				open_tracker_file_in_editor(t.path, source_line)
 			end
 			if halt then
 				return false
