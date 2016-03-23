@@ -17,6 +17,7 @@ require "Dialect.Bio.Nutrition"
 -- tools
 require "Tool.Entity"
 require "Tool.Tracker"
+require "Tool.Bio"
 
 Vessel.setup_config(function()
 	director = Dialect.director
