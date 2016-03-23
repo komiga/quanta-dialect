@@ -7,7 +7,9 @@ local Unit = require "Quanta.Unit"
 local Dialect = require "Dialect"
 local M = U.module(...)
 
-Dialect.make_action(M, "Eat", function(class)
+M.Eat = Dialect.make_action(
+	M, "Eat",
+function(class)
 
 function class:__init(group, binge, composition)
 	self.group = U.type_assert(group, "string", true) or nil
@@ -26,7 +28,7 @@ function class:to_object(action, obj)
 
 	local items_obj = O.push_child(obj)
 	O.set_name(items_obj, "items")
-	self.composition:to_object(items_obj, true)
+	self.composition:to_object(items_obj)
 end
 
 class.t_body:add({
@@ -35,7 +37,6 @@ Match.Pattern{
 	vtype = O.Type.identifier,
 	acceptor = function(context, self, obj)
 		self.group = O.identifier(obj)
-		return self.composition
 	end,
 },
 Match.Pattern{
@@ -54,6 +55,30 @@ Match.Pattern{
 		end,
 	},
 	},
+},
+})
+
+end)
+
+M.Drugtake = Dialect.make_action(
+	M, "B_Drugtake",
+function(class)
+
+function class:__init(composition)
+	self.composition = U.type_assert(composition, Unit, true) or Unit.Composition()
+end
+
+function class:to_object(action, obj)
+	self.composition:to_object(obj)
+end
+
+class.t_body:add({
+Match.Pattern{
+	any = true,
+	branch = Unit.t_composition_body,
+	acceptor = function(context, self, obj)
+		return self.composition
+	end,
 },
 })
 
