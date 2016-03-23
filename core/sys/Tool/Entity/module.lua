@@ -13,6 +13,7 @@ end)
 tool:add_commands({
 	require("Tool.Entity.List"),
 	require("Tool.Entity.Search"),
+	require("Tool.Entity.Print"),
 })
 
 Tool.add_tools(tool)
