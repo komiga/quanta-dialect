@@ -191,7 +191,7 @@ function(self, parent, options, params)
 			print_list(stats, root)
 		end
 
-		if i < #params then
+		if i < #roots then
 			Tool.log("")
 		end
 	end
