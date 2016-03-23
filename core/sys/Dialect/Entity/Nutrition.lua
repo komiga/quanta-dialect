@@ -83,7 +83,9 @@ Match.Pattern{
 M.Profile.t_body:build()
 M.Profile.t_head:build()
 
-local Nutrient = Dialect.make_entity(M, "Nutrient", function(class)
+M.Nutrient = Dialect.make_entity(
+	M, {"Nutrient", "Food", "Drug"},
+function(class)
 
 function class.Source:__init(source)
 	self.nutrients = {}
@@ -120,8 +122,5 @@ Match.Pattern{
 })
 
 end)
-
-Dialect.director:register_entity("Food", Nutrient)
-Dialect.director:register_entity("Drug", Nutrient)
 
 return M
