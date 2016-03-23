@@ -129,11 +129,17 @@ function M.make_entity(mod, name, setup)
 	function class.Source:__init(source)
 	end
 
+	function class.Source:to_object(source, obj)
+	end
+
 	function class:__init()
 	end
 
 	function class:from_object(context, parent, entity, obj)
 		return context:consume(class.t_head, obj, entity)
+	end
+
+	function class:to_object(entity, obj)
 	end
 
 	class.Source.Source = class.Source
