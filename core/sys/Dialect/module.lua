@@ -14,9 +14,12 @@ M.director:register_action("ETODO", Tracker.PlaceholderAction)
 
 function M.make_action(mod, name, setup)
 	U.type_assert(mod, "table")
-	U.type_assert(name, "string")
+	U.type_assert_any(name, {"string", "table"})
 	U.type_assert(setup, "function")
 
+	local names = U.is_type(name, "table") and name or {name}
+	U.assert(#names > 0)
+	name = names[1]
 	local class = U.class(mod[name])
 	mod[name] = class
 	class.name = name
@@ -64,16 +67,21 @@ function M.make_action(mod, name, setup)
 	class.t_head_tags:build()
 	class.t_head:build()
 
-	M.director:register_action(class.name, class)
+	for _, name in ipairs(names) do
+		M.director:register_action(name, class)
+	end
 
 	return class
 end
 
 function M.make_attachment(mod, name, setup)
 	U.type_assert(mod, "table")
-	U.type_assert(name, "string")
+	U.type_assert_any(name, {"string", "table"})
 	U.type_assert(setup, "function")
 
+	local names = U.is_type(name, "table") and name or {name}
+	U.assert(#names > 0)
+	name = names[1]
 	local class = U.class(mod[name])
 	mod[name] = class
 	class.name = name
@@ -110,16 +118,21 @@ function M.make_attachment(mod, name, setup)
 	class.t_head_tags:build()
 	class.t_head:build()
 
-	M.director:register_attachment(class.name, class)
+	for _, name in ipairs(names) do
+		M.director:register_attachment(name, class)
+	end
 
 	return class
 end
 
 function M.make_entity(mod, name, setup)
 	U.type_assert(mod, "table")
-	U.type_assert(name, "string")
+	U.type_assert_any(name, {"string", "table"})
 	U.type_assert(setup, "function")
 
+	local names = U.is_type(name, "table") and name or {name}
+	U.assert(#names > 0)
+	name = names[1]
 	local class = U.class(mod[name])
 	mod[name] = class
 	class.name = name
@@ -175,7 +188,9 @@ function M.make_entity(mod, name, setup)
 	class.t_head_tags:build()
 	class.t_head:build()
 
-	M.director:register_entity(class.name, class)
+	for _, name in ipairs(names) do
+		M.director:register_entity(name, class)
+	end
 
 	return class
 end
