@@ -7,6 +7,16 @@ local Unit = require "Quanta.Unit"
 local Dialect = require "Dialect"
 local M = U.module(...)
 
+function M.group(action)
+	if U.is_type(action.data, M.Eat) then
+		return action.data.group
+	elseif U.is_type(action.data, M.Drugtake) then
+		return "Drug"
+	else
+		U.assert(false)
+	end
+end
+
 M.Eat = Dialect.make_action(
 	M, "Eat",
 function(class)
