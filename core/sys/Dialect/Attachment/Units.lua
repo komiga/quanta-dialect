@@ -9,14 +9,13 @@ local M = U.module(...)
 
 Dialect.make_attachment(M, "Units", function(class)
 
-function class:__init(items)
-	self.items = U.type_assert(items, "table", true) or {}
+function class:__init(composition)
+	self.composition = U.type_assert(composition, Unit, true) or Unit.Composition()
+	U.assert(self.composition.type == Unit.Type.composition)
 end
 
 function class:to_object(attachment, obj)
-	for _, item in pairs(self.items) do
-		item:to_object(O.push_child(obj))
-	end
+	self.composition:to_object(obj, true)
 end
 
 function class.acceptor(context, self, obj)
@@ -29,18 +28,22 @@ end
 
 class.t_body:add({
 Match.Pattern{
-	layer = Unit.p_definition_head,
+	name = Match.Any,
+	vtype = Match.Any,
+	children = Match.Any,
+	tags = Match.Any,
+	quantity = Match.Any,
+	branch = Unit.t_composition_head_gobble,
 	acceptor = function(context, self, obj)
-		return Unit.Definition()
+		return self.composition
 	end,
-	post_branch_pre = function(context, unit, obj)
-		local self = context:value(1)
-		if not unit.name then
-			return Match.Error("local unit must be named")
-		elseif self.items[unit.name] then
-			return Match.Error("local unit '%s' already exists", unit.name)
+	post_branch = function(context, self, obj)
+		local unit = U.table_last(self.composition.items)
+		if unit.type == Unit.Type.definition then
+			if not unit.name then
+				return Match.Error("local unit definition must be named")
+			end
 		end
-		self.items[unit.name] = unit
 	end,
 },
 })
