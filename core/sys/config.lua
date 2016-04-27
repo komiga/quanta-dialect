@@ -9,6 +9,7 @@ local Dialect = require "Dialect"
 
 -- entities
 require "Dialect.Entity.Nutrition"
+require "Dialect.Entity.Account"
 
 -- tracker
 require "Dialect.Attachment.Units"
