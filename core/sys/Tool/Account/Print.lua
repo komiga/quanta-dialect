@@ -30,9 +30,11 @@ local function print_credentials(entity)
 	local account = entity.generic.data
 	Tool.log("-- %s --", entity:ref())
 	Tool.log(
-		" @ : %s\n" ..
-		"uid: %s\n" ..
-		"pwd: %s",
+		"desc: %s\n" ..
+		"addr: %s\n" ..
+		"uid : %s\n" ..
+		"pwd : %s",
+		entity.generic.description,
 		decrypt_property(account.email) or "<none>",
 		decrypt_property(account.uid) or "<none>",
 		decrypt_property(account.pwd) or "<none>"
@@ -41,7 +43,7 @@ end
 
 local command = Tool("print", options, {}, [=[
 print [<ref> ...]
-  decrypt and print uid & pwd for an account
+  print plaintext details for an account
 ]=],
 function(self, parent, options, params)
 	if #params == 0 then
