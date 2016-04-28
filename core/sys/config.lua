@@ -17,6 +17,7 @@ require "Dialect.Bio.Nutrition"
 
 -- tools
 require "Tool.Entity"
+require "Tool.Account"
 require "Tool.Tracker"
 require "Tool.Bio"
 
