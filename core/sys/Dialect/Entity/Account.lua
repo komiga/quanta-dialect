@@ -52,16 +52,19 @@ M.Account = Dialect.make_entity(
 function(class)
 
 function class.Source:__init(source)
+	self.email = M.Property()
 	self.uid = M.Property()
 	self.pwd = M.Property()
 end
 
 function class.Source:to_object(source, obj)
+	self.email:to_object(obj, "email")
 	self.uid:to_object(obj, "uid")
 	self.pwd:to_object(obj, "pwd")
 end
 
 class.Source.t_body:add({
+M.Property.adapt_pattern("email"),
 M.Property.adapt_pattern("uid"),
 M.Property.adapt_pattern("pwd"),
 })
