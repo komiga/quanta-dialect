@@ -7,7 +7,59 @@ local Entity = require "Quanta.Entity"
 
 require "Tool.common"
 
+local function exclude_previous_and_disable(tool)
+	if tool.data.show_exclusive then
+		for k, _ in pairs(tool.data.show) do
+			tool.data.show[k] = false
+		end
+		tool.data.show_exclusive = false
+	end
+end
+
 local options = {
+Tool.Option("-i", "boolean", [=[
+-i
+  inclusive (treat options additively, not exclusively)
+]=],
+function(tool, value)
+	tool.data.show_exclusive = false
+end),
+
+Tool.Option("-e", "boolean", [=[
+-e
+  show email (default)
+]=],
+function(tool, value)
+	exclude_previous_and_disable(tool)
+	tool.data.show.email = value
+end),
+
+Tool.Option("-m", "boolean", [=[
+-m
+  show misc
+]=],
+function(tool, value)
+	exclude_previous_and_disable(tool)
+	tool.data.show.misc = value
+end),
+
+Tool.Option("-u", "boolean", [=[
+-u
+  show uid (default)
+]=],
+function(tool, value)
+	exclude_previous_and_disable(tool)
+	tool.data.show.uid = value
+end),
+
+Tool.Option("-p", "boolean", [=[
+-p
+  show pwd (default)
+]=],
+function(tool, value)
+	exclude_previous_and_disable(tool)
+	tool.data.show.pwd = value
+end),
 }
 
 local BYTE_NEWLINE = string.byte('\n')
@@ -41,7 +93,10 @@ local function decrypt_property(property)
 	return value or "<none>"
 end
 
-local function decrypt_property_and_pad(property)
+local function pretty_property(property, show)
+	if not show then
+		return "<skip>"
+	end
 	local value = decrypt_property(property)
 	if value then
 		value = string.gsub(value, "\n", "\n      ")
@@ -49,24 +104,28 @@ local function decrypt_property_and_pad(property)
 	return value
 end
 
-local function print_credentials(entity)
+local function print_credentials(entity, show)
 	local account = entity.generic.data
 	Tool.log("-- %s --", entity:ref())
 	Tool.log(
 		"desc: %s\n" ..
 		"addr: %s\n" ..
+		"misc: %s\n" ..
 		"uid : %s\n" ..
 		"pwd : %s",
 		entity.generic.description or "<none>",
-		decrypt_property_and_pad(account.email),
-		decrypt_property_and_pad(account.uid),
-		decrypt_property_and_pad(account.pwd)
+		pretty_property(account.email, show.email),
+		pretty_property(account.misc, show.misc),
+		pretty_property(account.uid, show.uid),
+		pretty_property(account.pwd, show.pwd)
 	)
 end
 
 local command = Tool("print", options, {}, [=[
 print [<ref> ...]
   print plaintext details for an account
+
+  default options: -e -u -p
 ]=],
 function(self, parent, options, params)
 	if #params == 0 then
@@ -96,7 +155,7 @@ function(self, parent, options, params)
 	end
 
 	for i, entity in ipairs(entities) do
-		print_credentials(entity)
+		print_credentials(entity, self.data.show)
 
 		if i < #entities then
 			Tool.log("")
@@ -104,6 +163,14 @@ function(self, parent, options, params)
 	end
 end)
 
-command.default_data = {}
+command.default_data = {
+	show_exclusive = true,
+	show = {
+		email = true,
+		misc = false,
+		uid = true,
+		pwd = true,
+	},
+}
 
 return command
