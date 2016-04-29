@@ -67,7 +67,6 @@ function add_entity(parent, obj)
 			j, _ = string.find(ref, '.', i, true)
 		end
 		name = string.sub(ref, i)
-		print("   O " .. name)
 	end
 
 	local entity = Entity(name, "Account", O.hash_name("Account"), Dialect.Entity.Account.Account)
@@ -112,7 +111,6 @@ function main(params)
 	Vessel.init("lib/core/test/vessel_data")
 	U.assert(#params == 2)
 	FS.working_dir_scope(U.path_dir(params[1]) .. "/..", function()
-		print(FS.working_dir())
 		Dialect = require "Dialect"
 		require "Dialect.Entity.Account"
 

@@ -10,20 +10,43 @@ require "Tool.common"
 local options = {
 }
 
+local BYTE_NEWLINE = string.byte('\n')
+
+local function trim_trailing_newlines(s)
+	local b
+	for i = #s, 1, -1 do
+		b = string.byte(s, i)
+		if b ~= BYTE_NEWLINE then
+			return string.sub(s, 1, i)
+		end
+	end
+	return s
+end
+
 local function decrypt_property(property)
 	local value = property.value
 	if property.encrypted and property.value ~= nil then
 		value, _ = string.gsub(property.value, "'", "\\'")
 		local command = string.format([[qv-data-cipher decrypt --base64 '%s']], value)
 		local proc = io.popen(command, "r")
-		value = proc:read("*l")
+		value = proc:read("*a")
 		local success, termination_reason, code = io.close(proc)
 		-- print("'" .. value .. "'", success, termination_reason, code)
 		if not value or not success or (termination_reason and code ~= 0) then
 			value = "<error>"
+		else
+			value = trim_trailing_newlines(value)
 		end
 	end
 	return value or "<none>"
+end
+
+local function decrypt_property_and_pad(property)
+	local value = decrypt_property(property)
+	if value then
+		value = string.gsub(value, "\n", "\n      ")
+	end
+	return value
 end
 
 local function print_credentials(entity)
@@ -34,10 +57,10 @@ local function print_credentials(entity)
 		"addr: %s\n" ..
 		"uid : %s\n" ..
 		"pwd : %s",
-		entity.generic.description,
-		decrypt_property(account.email) or "<none>",
-		decrypt_property(account.uid) or "<none>",
-		decrypt_property(account.pwd) or "<none>"
+		entity.generic.description or "<none>",
+		decrypt_property_and_pad(account.email),
+		decrypt_property_and_pad(account.uid),
+		decrypt_property_and_pad(account.pwd)
 	)
 end
 
