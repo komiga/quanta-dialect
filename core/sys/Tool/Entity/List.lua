@@ -14,6 +14,14 @@ Tool.Option("-h", "boolean", [=[
 function(tool, value)
 	tool.data.hierarchy = value
 end),
+
+Tool.Option({"-u", "--universe"}, "string", [=[
+-u=UNIVERSE_NAME --universe=UNIVERSE_NAME
+  print as a hierarchy
+]=],
+function(tool, value)
+	tool.data.universe = value
+end),
 }
 
 local function make_stats()
@@ -160,7 +168,7 @@ list [-h] [<ref> ...]
   list entities
 ]=],
 function(self, parent, options, params)
-	local universe, msg = Entity.read_universe(Vessel.data_path("entity/universe.q"))
+	local universe, msg = Entity.read_universe(Vessel.data_path("entity/" .. self.data.universe .. ".q"))
 	if not universe then
 		return Tool.log_error(msg)
 	end
@@ -200,6 +208,7 @@ end)
 
 command.default_data = {
 	hierarchy = false,
+	universe = "universe",
 }
 
 return command
