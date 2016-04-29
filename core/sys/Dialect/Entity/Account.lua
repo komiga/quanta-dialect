@@ -20,7 +20,7 @@ function M.Property:to_object(obj, serialized_name)
 	if self.value ~= nil and self.value ~= "" then
 		local value_obj = O.push_child(obj)
 		O.set_name(value_obj, serialized_name)
-		O.set_string(value_obj, self)
+		O.set_string(value_obj, self.value)
 		if self.encrypted then
 			O.set_string_type(value_obj, "enc")
 		end
