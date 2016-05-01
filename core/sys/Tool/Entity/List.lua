@@ -17,7 +17,7 @@ end),
 
 Tool.Option({"-u", "--universe"}, "string", [=[
 -u=UNIVERSE_NAME --universe=UNIVERSE_NAME
-  print as a hierarchy
+  select a universe (from data/entity/)
 ]=],
 function(tool, value)
 	tool.data.universe = value
