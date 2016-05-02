@@ -95,13 +95,13 @@ local function decrypt_property(property)
 		value = proc:read("*a")
 		local success, termination_reason, code = io.close(proc)
 		-- print("'" .. value .. "'", success, termination_reason, code)
-		if not value or not success or (termination_reason and code ~= 0) then
+		if not value or value == "" or not success or (termination_reason and code ~= 0) then
 			value = "<error>"
 		else
 			value = trim_trailing_newlines(value)
 		end
 	end
-	return value or "<none>"
+	return value
 end
 
 local function pretty_property(property, show)
