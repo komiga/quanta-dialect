@@ -25,13 +25,15 @@ function(tool, value)
 	tool.data.show_exclusive = false
 end),
 
-Tool.Option("-e", "boolean", [=[
--e
-  show email (default)
+Tool.Option("-a", "boolean", [=[
+-a
+  show all
 ]=],
 function(tool, value)
-	exclude_previous_and_disable(tool)
-	tool.data.show.email = value
+	for k, _ in pairs(tool.data.show) do
+		tool.data.show[k] = true
+	end
+	tool.data.show_exclusive = false
 end),
 
 Tool.Option("-m", "boolean", [=[
@@ -41,6 +43,15 @@ Tool.Option("-m", "boolean", [=[
 function(tool, value)
 	exclude_previous_and_disable(tool)
 	tool.data.show.misc = value
+end),
+
+Tool.Option("-e", "boolean", [=[
+-e
+  show email (default)
+]=],
+function(tool, value)
+	exclude_previous_and_disable(tool)
+	tool.data.show.email = value
 end),
 
 Tool.Option("-u", "boolean", [=[
@@ -122,7 +133,7 @@ local function print_credentials(entity, show)
 end
 
 local command = Tool("print", options, {}, [=[
-print [<ref> ...]
+print [property selectors] <ref> [...]
   print plaintext details for an account
 
   default options: -e -u -p
