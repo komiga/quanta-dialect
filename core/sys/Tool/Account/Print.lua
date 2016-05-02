@@ -109,7 +109,9 @@ local function pretty_property(property, show)
 		return "<skip>"
 	end
 	local value = decrypt_property(property)
-	if value then
+	if not value or value == "" then
+		value = "<none>"
+	elseif value then
 		value = string.gsub(value, "\n", "\n      ")
 	end
 	return value
