@@ -24,9 +24,9 @@ function date_to_string(date)
 	return O.write_text_string(obj, true)
 end
 
-function load_tracker(tracker, t, date_str)
+function load_tracker(tracker, path, date_str)
 	local obj = O.create()
-	if O.read_text_file(obj, t.path, true) then
+	if O.read_text_file(obj, path, true) then
 		local success, msg, source_line = tracker:from_object(obj)
 		if success then
 			return true
@@ -34,7 +34,7 @@ function load_tracker(tracker, t, date_str)
 			return false, string.format("%s\n!! %s is malformed !!", msg, date_str), source_line
 		end
 	else
-		return false, string.format("failed to read tracker: %s", t.path)
+		return false, string.format("failed to read tracker: %s", path)
 	end
 end
 
