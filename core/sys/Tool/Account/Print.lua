@@ -117,8 +117,9 @@ local function pretty_property(property, show)
 	return value
 end
 
-local function print_credentials(entity, show)
-	local account = entity.generic.data
+local function print_credentials(entity, source, show)
+	source = source == 0 and entity.generic or entity.generic.sources[source]
+	local account = source.data
 	Tool.log("-- %s --", entity:ref())
 	Tool.log(
 		"desc: %s\n" ..
@@ -126,7 +127,7 @@ local function print_credentials(entity, show)
 		"misc: %s\n" ..
 		"uid : %s\n" ..
 		"pwd : %s",
-		entity.generic.description or "<none>",
+		source.description or source.label or "<none>",
 		pretty_property(account.email, show.email),
 		pretty_property(account.misc, show.misc),
 		pretty_property(account.uid, show.uid),
@@ -168,7 +169,12 @@ function(self, parent, options, params)
 	end
 
 	for i, entity in ipairs(entities) do
-		print_credentials(entity, self.data.show)
+		local source = 0
+		if entity:any_sources() then
+			-- NB: assumes sequential... too lazy at present
+			source = #entity.generic.sources
+		end
+		print_credentials(entity, source, self.data.show)
 
 		if i < #entities then
 			Tool.log("")
