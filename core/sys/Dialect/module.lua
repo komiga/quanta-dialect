@@ -23,6 +23,7 @@ function M.make_action(mod, name, setup)
 	local class = U.class(mod[name])
 	mod[name] = class
 	class.name = name
+	class.name_hash = O.hash_name(name)
 
 	function class:__init()
 	end
@@ -85,6 +86,7 @@ function M.make_attachment(mod, name, setup)
 	local class = U.class(mod[name])
 	mod[name] = class
 	class.name = name
+	class.name_hash = O.hash_name(name)
 
 	function class:__init()
 	end
@@ -136,6 +138,7 @@ function M.make_entity(mod, name, setup)
 	local class = U.class(mod[name])
 	mod[name] = class
 	class.name = name
+	class.name_hash = O.hash_name(name)
 
 	class.Source = U.class(class.Source)
 
