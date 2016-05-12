@@ -8,6 +8,7 @@ local Director = require "Quanta.Director"
 local Dialect = require "Dialect"
 
 -- entities
+require "Dialect.Entity.Chemical"
 require "Dialect.Entity.Nutrition"
 require "Dialect.Entity.Account"
 
