@@ -156,6 +156,7 @@ function(self, parent, options, params)
 	local search_branches = {
 		Entity.make_search_branch(universe:search(nil, "food"), 0),
 		Entity.make_search_branch(universe:search(nil, "drug"), 0),
+		Entity.make_search_branch(universe, 0),
 	}
 	local resolver = Unit.Resolver(
 		select_searcher,
