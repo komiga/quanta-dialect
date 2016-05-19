@@ -24,7 +24,10 @@ local function collect_actions(t)
 				local name = Dialect.Bio.Nutrition.group(action)
 				local g = t.groups[name]
 				if not g then
-					g = {name = name, actions = {}}
+					g = {
+						name = name,
+						actions = {},
+					}
 					t.groups[name] = g
 					table.insert(t.groups, g)
 				end
