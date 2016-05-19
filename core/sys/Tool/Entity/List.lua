@@ -163,7 +163,7 @@ local function print_list(stats, root)
 end
 
 local command = Tool("list", options, {}, [=[
-list [-h] [<ref> ...]
+list [options] [<ref> ...]
   list entities
 ]=],
 function(self, parent, options, params)

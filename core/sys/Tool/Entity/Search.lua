@@ -5,10 +5,17 @@ local Vessel = require "Quanta.Vessel"
 local Entity = require "Quanta.Entity"
 
 local options = {
+Tool.Option({"-u", "--universe"}, "string", [=[
+-u=UNIVERSE_NAME --universe=UNIVERSE_NAME
+  select a universe (from data/entity/)
+]=],
+function(tool, value)
+	tool.data.universe = value
+end),
 }
 
 local command = Tool("search", options, {}, [=[
-search <ref> [...]
+search [options] <ref> [...]
   search for entities
 ]=],
 function(self, parent, options, params)
@@ -17,7 +24,7 @@ function(self, parent, options, params)
 		return
 	end
 
-	local universe, msg = Entity.read_universe(Vessel.data_path("entity/universe.q"))
+	local universe, msg = Entity.read_universe(Vessel.data_path("entity/" .. self.data.universe .. ".q"))
 	if not universe then
 		return Tool.log_error(msg)
 	end
@@ -57,5 +64,9 @@ function(self, parent, options, params)
 		end
 	end
 end)
+
+command.default_data = {
+	universe = "universe",
+}
 
 return command
