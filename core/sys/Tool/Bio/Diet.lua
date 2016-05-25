@@ -76,6 +76,10 @@ end
 function NotFoundModifier:to_object(modifier, obj)
 end
 
+function NotFoundModifier:make_copy()
+	return NotFoundModifier()
+end
+
 function NotFoundModifier:compare_equal(other)
 	return true
 end
