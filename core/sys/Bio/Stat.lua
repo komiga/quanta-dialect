@@ -38,6 +38,38 @@ function M:add(item, amount)
 	end
 end
 
+function M:to_object(obj)
+	if obj then
+		O.clear(obj)
+	else
+		obj =  O.create()
+	end
+
+	if not self.item then
+		O.set_string(obj, "__EMPTY__")
+	elseif U.is_type(self.item, "string") then
+		O.set_string(obj, self.item)
+	elseif U.is_instance(self.item, Unit) then
+		local unit = self.item
+		local tmp_items = unit.items
+		local tmp_parts = unit.parts
+		local tmp_measurements = unit.measurements
+		unit.items = {}
+		unit.parts = {}
+		unit.measurements = {self.amount}
+
+		obj = unit:to_object(obj)
+		if unit.type == Unit.Type.composition then
+			O.set_identifier(obj, "<composition>")
+		end
+
+		unit.measurements = tmp_measurements
+		unit.items = tmp_items
+		unit.parts = tmp_parts
+	end
+	return obj
+end
+
 function M:_expand(unit, amount)
 	-- inputs:
 	-- ref to entity
