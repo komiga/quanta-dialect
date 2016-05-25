@@ -9,13 +9,43 @@ local ChemicalElement = require "Dialect.Entity.Chemical".Element
 
 local M = U.module(...)
 
+M.debug = false
 M.resolve_func = function()
 	U.assert(false, "missing resolver function")
 end
 
 local quantity_mass = Measurement.Quantity.mass
+local munit_dimensionless = Measurement.get_unit("")
 local munit_gram = Measurement.get_unit("g")
+local munit_milligram = Measurement.get_unit("mg")
+local munit_ratio = Measurement.get_unit("ratio")
 local chemical_id_hash = O.hash_name("chemical")
+
+local BioDebugModifier = U.class(BioDebugModifier)
+
+function BioDebugModifier:__init(unit)
+	self.unit = unit
+end
+
+function BioDebugModifier:from_object(context, ref, modifier, obj)
+end
+
+function BioDebugModifier:to_object(modifier, obj)
+	obj = O.push_child(obj)
+	if self.unit._factor ~= nil then
+		O.set_decimal(obj, self.unit._factor)
+	else
+		O.set_identifier(obj, "NO_FACTOR")
+	end
+end
+
+function BioDebugModifier:make_copy()
+	return BioDebugModifier(unit)
+end
+
+function BioDebugModifier:compare_equal(other)
+	return true
+end
 
 function M.normalize_measurement(m)
 	if m.qindex == Measurement.QuantityIndex.dimensionless then
@@ -65,7 +95,13 @@ local function normalize_unit_impl(unit, outer)
 	if unit._normalized then
 		return
 	end
-	unit._factor = 1.0
+	if unit._factor == nil then
+		unit._factor = 1.0
+	end
+	if M.debug then
+		table.insert(unit.modifiers, Unit.Modifier("__bio_dbg__", nil, BioDebugModifier(unit)))
+	end
+	unit._normalized = true
 
 	-- TODO: use average mass of thing if unit only measures number of instances
 	-- TODO: use typical/average measurement of thing if unspecified
@@ -131,7 +167,6 @@ local function normalize_unit_impl(unit, outer)
 			end
 		end
 	end
-	unit._normalized = true
 end
 
 function M.normalize_unit(unit, outer)
