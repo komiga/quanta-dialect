@@ -117,23 +117,23 @@ function M:_expand(unit, amount)
 	self.amount = amount
 
 	if unit.type == Unit.Type.reference then
-		if not unit.thing then
-			-- nothing to do
-		elseif U.is_instance(unit.thing, Entity) then
-			if #unit.items == 0 then -- simple
-				self:_expand_entity(unit.thing, unit.thing_variant, amount)
-			else -- compound
+		if unit.thing then
+			if #unit.items == 0 then -- direct
+				if U.is_instance(unit.thing, Entity) then
+					self:_expand_entity(unit.thing, unit.thing_variant, amount)
+				elseif U.is_instance(unit.thing, Unit.Element) then
+					self:_expand_element(unit.thing, amount)
+				else
+					self:_expand_definition(unit.thing, amount)
+				end
+			else -- compound or selection
 				for _, item in ipairs(unit.items) do
 					self:add(item, amount)
 				end
 			end
-		elseif U.is_instance(unit.thing, Unit) then
-			-- TODO: parts
-			Bio.normalize_unit(unit.thing)
-			self:add(unit.thing, amount)
-		else
-			U.assert(false, "unknown thing type (referenced by '%s')", item.id)
 		end
+	elseif unit.type == Unit.Type.definition then
+		self:_expand_definition(unit, amount)
 	else
 		for _, item in ipairs(unit.items) do
 			self:add(item, amount)
@@ -164,6 +164,19 @@ function M:_expand_entity(entity, variant, amount)
 		for _, item in ipairs(composition.items) do
 			self:add(item, amount)
 		end
+	end
+end
+
+function M:_expand_definition(unit, amount)
+	U.type_assert(unit, Unit)
+	local element = unit.parts[1]
+	self:_expand_element(element, amount)
+end
+
+function M:_expand_element(element, amount)
+	U.type_assert(element, Unit.Element)
+	for _, step in ipairs(element.steps) do
+		self:add(step.composition, amount)
 	end
 end
 
