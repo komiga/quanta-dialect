@@ -156,7 +156,8 @@ function M:_expand_entity(entity, variant, amount)
 		composition = profile.composition
 	elseif #variant.composition.items > 0 then
 		composition = variant.composition
-		Bio.normalize_unit(composition)
+		Bio.resolve_func(composition)
+		Bio.normalize_unit(composition, #composition.measurements == 0 and amount)
 	end
 
 	if composition then
