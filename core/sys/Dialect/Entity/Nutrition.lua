@@ -16,7 +16,7 @@ M.Profile = U.class(M.Profile)
 function M.Profile:__init()
 	self.name = nil
 	self.name_hash = O.NAME_NULL
-	self.of = Measurement()
+	self.of = Measurement(0, "mg")
 	self.data_source = nil
 	self.composition = Unit.Composition()
 end
@@ -44,6 +44,8 @@ function M.Profile:normalize()
 		return
 	end
 
+	Bio.normalize_measurement(self.of)
+	self.composition.measurements = {self.of}
 	Bio.resolve_func(self.composition)
 	Bio.normalize_unit(self.composition, self.of)
 end
