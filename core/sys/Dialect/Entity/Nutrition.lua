@@ -7,6 +7,8 @@ local Unit = require "Quanta.Unit"
 local Entity = require "Quanta.Entity"
 
 local Dialect = require "Dialect"
+local Bio = require "Bio"
+
 local M = U.module(...)
 
 M.Profile = U.class(M.Profile)
@@ -35,6 +37,15 @@ function M.Profile:to_object(obj)
 	local composition_obj = O.push_child(obj)
 	self.composition:to_object(composition_obj)
 	O.set_name(composition_obj, "composition")
+end
+
+function M.Profile:normalize()
+	if self.composition._normalized then
+		return
+	end
+
+	Bio.resolve_func(self.composition)
+	Bio.normalize_unit(self.composition, self.of)
 end
 
 M.Profile.t_body = Match.Tree({
