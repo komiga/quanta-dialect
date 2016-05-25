@@ -93,8 +93,23 @@ function M:_expand(unit, amount)
 		unit = unit:make_copy()
 		Bio.normalize_unit(unit)
 	end
-	amount = amount or unit.measurements[1] or Measurement(0, munit_gram)
+
+	local base_amount = unit.measurements[1]
+	local common_unit = base_amount and base_amount:unit() or munit_gram
+	if not amount then
+		amount = base_amount or Measurement(0, common_unit)
+	end
 	amount = amount:make_copy()
+	amount:rebase(common_unit)
+	if base_amount then
+		if amount.of == 0 then
+			amount.of = base_amount.of
+		end
+		if amount:is_exact() then
+			amount.approximation = base_amount.approximation
+			amount.certain = base_amount.certain
+		end
+	end
 	Bio.normalize_measurement(amount)
 	amount.value = amount.value * unit._factor
 
