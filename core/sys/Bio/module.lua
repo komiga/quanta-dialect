@@ -219,6 +219,12 @@ local function normalize_unit_impl(unit, outer)
 			end
 		end
 	end
+
+	for _, part in ipairs(unit.parts) do
+		for _, step in ipairs(part.steps) do
+			M.normalize_unit(step.composition)
+		end
+	end
 end
 
 function M.normalize_unit(unit, outer)
