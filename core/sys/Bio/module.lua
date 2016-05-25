@@ -140,7 +140,7 @@ local function normalize_unit_impl(unit, outer)
 			if #item.measurements > 0 then
 				normalize_unit_impl(item, outer)
 				local m = item.measurements[1]
-				if m.qindex == Measurement.QuantityIndex.mass then
+				if m.qindex == quantity_mass.index then
 					inner_sum:add(m)
 				end
 				table.insert(quantified, item)
@@ -171,8 +171,10 @@ end
 
 function M.normalize_unit(unit, outer)
 	if outer then
-		outer = outer:make_copy()
-		outer:rebase(munit_gram)
+		if outer.qindex ~= quantity_mass.index then
+			outer = outer:make_copy()
+			outer:rebase(munit_gram)
+		end
 	end
 	normalize_unit_impl(unit, outer)
 end
