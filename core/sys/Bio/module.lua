@@ -61,6 +61,9 @@ function M.normalize_measurement(m)
 end
 
 function M.normalize_unit_measurements(unit, outer)
+	if #unit.measurements == 0 and unit.thing and not U.is_instance(unit.thing, Entity) then
+		unit.measurements = {Measurement(0, munit_gram, 1, 0, true)}
+	end
 	if #unit.measurements > 0 then
 		local specified = unit.measurements[1]
 		if specified.qindex == Measurement.QuantityIndex.ratio then
