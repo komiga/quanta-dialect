@@ -50,7 +50,8 @@ function M.normalize_unit_measurements(unit, outer)
 		end
 		unit.measurements = {specified}
 		if outer then
-			unit._factor = specified.value / outer.value
+			-- specified:rebase(outer:unit())
+			unit._factor = specified.value / outer.value * (10 ^ (specified.magnitude - outer.magnitude))
 		end
 		return specified
 	end
