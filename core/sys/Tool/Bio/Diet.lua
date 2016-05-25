@@ -7,6 +7,8 @@ local Entity = require "Quanta.Entity"
 local Tracker = require "Quanta.Tracker"
 local Vessel = require "Quanta.Vessel"
 local Tool = require "Quanta.Tool"
+
+local Stat = require "Bio.Stat"
 require "Dialect.Bio.Nutrition"
 
 require "Tool.common"
@@ -34,6 +36,32 @@ local function collect_actions(t)
 				table.insert(g.actions, action)
 			end
 		end
+	end
+end
+
+local function print_stat(stat, left)
+	local str = "__NIL__"
+	if U.is_type(stat.item, "string") then
+		str = stat.item
+	elseif U.is_instance(stat.item, Unit) then
+		local unit = stat.item
+		local tmp_items = unit.items
+		local tmp_parts = unit.parts
+		unit.items = {}
+		unit.parts = {}
+
+		local obj = unit:to_object()
+		str = O.write_text_string(obj, true)
+		if unit.type == Unit.Type.composition then
+			str = "<composition>" .. string.sub(str, 5)
+		end
+
+		unit.items = tmp_items
+		unit.parts = tmp_parts
+	end
+	Tool.log("%s%s", string.rep(' ', left), str)
+	for _, s in ipairs(stat.children) do
+		print_stat(s, left + 2)
 	end
 end
 
@@ -169,6 +197,10 @@ function(self, parent, options, params)
 	U.assert(resolver.scope_searcher ~= nil)
 	resolver:push_searcher(searcher_wrapper("universe", Unit.Resolver.searcher_universe(universe, search_branches, nil)))
 
+	Bio.resolve_func = function(unit)
+		return resolve_and_mark(resolver, unit)
+	end
+
 	local obj = O.create()
 	for _, t in ipairs(dates) do
 		t.requested = true
@@ -206,9 +238,18 @@ function(self, parent, options, params)
 		if t.local_units then
 			resolver:pop()
 		end
+
+		Tool.log("\nstats:")
+		t.stat = Stat()
+		for _, g in ipairs(t.groups) do
+			g.stat = Stat(g.name)
+			for _, action in ipairs(g.actions) do
+				g.stat:add(action.data.composition)
+			end
+			t.stat:add(g.stat)
+			print_stat(g.stat, 0)
+		end
 	end
-
-
 end)
 
 command.auto_read_options = false
