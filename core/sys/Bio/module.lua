@@ -213,7 +213,7 @@ local function normalize_unit_impl(unit, outer)
 			local dist_amount = U.max(0, (outer.value - inner_sum.value) / #unspecified)
 			if dist_amount > 0 then
 				for _, item in ipairs(unspecified) do
-					item.measurements = {Measurement(dist_amount, common_unit, 0, 0, false)}
+					item.measurements = {Measurement(dist_amount, common_unit, 0, 0, #unspecified == 1)}
 					normalize_unit_impl(item, outer)
 				end
 			end
