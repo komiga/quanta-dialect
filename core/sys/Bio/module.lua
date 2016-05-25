@@ -109,58 +109,107 @@ local function normalize_unit_impl(unit, outer)
 
 	outer = M.normalize_unit_measurements(unit, outer)
 
-	if unit.id == chemical_id_hash and unit.thing then
+	local common_unit = outer and outer:unit()
+	-- U.log("%s :: %s", unit.id, common_unit and common_unit.name or "none")
+	if unit.id_hash == chemical_id_hash and unit.thing then
+		if not common_unit then
+			common_unit = munit_milligram
+		end
+		local inner_sum = Measurement(0, common_unit)
+		local specified_mass = 0
 		local total_atomic_mass = 0
-		for _, item in ipairs(unit.items) do
+		for index, item in ipairs(unit.items) do
 			U.assert(item.thing and U.is_instance(item.thing.data, ChemicalElement))
 			local element = item.thing.generic.data
-			local n = 1
 			if #item.measurements > 0 then
-				n = item.measurements[1].of
-				U.assert(n >= 1)
+				local m = M.normalize_unit_measurements(item)
+				if m.of == 0 then
+					m.of = 1
+				end
+				item._num_atoms = m.of
+				item._factor = m.of * element.mass
+				if m.qindex == Measurement.QuantityIndex.mass then
+					if specified_mass == 0 then
+						common_unit = m:unit()
+						inner_sum:rebase(common_unit)
+					end
+					inner_sum:add(m)
+					specified_mass = specified_mass + item._factor
+				end
+			else
+				item._num_atoms = 1
+				item._factor = element.mass
 			end
-			item._factor = n * element.mass
 			total_atomic_mass = total_atomic_mass + item._factor
 		end
-
-		local unit = outer and outer:unit() or nil
-		for _, item in ipairs(unit.items) do
+		if specified_mass ~= 0 then
+			inner_sum.of = 0
+			inner_sum.value = inner_sum.value / (specified_mass / total_atomic_mass)
+			unit.measurements = {inner_sum}
+			outer = M.normalize_unit_measurements(unit, outer)
+		end
+		for index, item in ipairs(unit.items) do
+			if M.debug and not item._normalized then
+				table.insert(item.modifiers, Unit.Modifier("__bio_dbg__", nil, BioDebugModifier(item)))
+			end
+			item._normalized = true
 			item._factor = item._factor / total_atomic_mass
 			if outer then
-				item.measurements = {Measurement(item._factor * outer.value, unit, 0, 0, false)}
+				item.measurements = {Measurement(item._factor * outer.value, common_unit, item._num_atoms, 0, outer.certain)}
+			else
+				item.measurements = {Measurement(item._factor, munit_ratio, item._num_atoms, 0, true)}
 			end
 		end
-	else
-		local common_unit = outer and outer:unit() or munit_gram
-		local inner_sum = Measurement(0, common_unit)
+	elseif #unit.items > 0 then
+		if not common_unit then
+			common_unit = munit_gram
+			for _, item in ipairs(unit.items) do
+				if #item.measurements > 0 then
+					local m = item.measurements[1]
+					if m:quantity().tangible then
+						common_unit = quantity_mass.UnitByMagnitude[m.magnitude]
+						U.assert(common_unit)
+						break
+					end
+				end
+			end
+		end
 
-		local quantified = {}
-		local unquantified = {}
+		local inner_sum = Measurement(0, common_unit)
+		local specified = {}
+		local unspecified = {}
 		for _, item in ipairs(unit.items) do
+			if #item.measurements == 0 then
+				if item.id_hash == chemical_id_hash and item.thing then
+					normalize_unit_impl(item, outer)
+				elseif not U.is_instance(item.thing, Entity) then
+					unit.measurements = {Measurement(0, munit_dimensionless, 1, 0, true)}
+				end
+			end
 			if #item.measurements > 0 then
 				normalize_unit_impl(item, outer)
 				local m = item.measurements[1]
 				if m.qindex == quantity_mass.index then
 					inner_sum:add(m)
 				end
-				table.insert(quantified, item)
+				table.insert(specified, item)
 			else
-				table.insert(unquantified, item)
+				table.insert(unspecified, item)
 			end
 		end
-
 		if not outer then
-			if #unquantified == 0 then
+			if #unspecified == 0 then
 				unit.measurements = {inner_sum:make_copy()}
 			end
-			for _, item in ipairs(quantified) do
-				item._factor = item.measurements[1].value / inner_sum.value
+			for _, item in ipairs(specified) do
+				local m = item.measurements[1]
+				item._factor = m.value / (inner_sum.value * (10 ^ (inner_sum.magnitude - m.magnitude)))
 			end
-		elseif #unquantified > 0 then
+		elseif #unspecified > 0 then
 			-- TODO: maybe a better way to handle this?
-			local dist_amount = U.max(0, (outer.value - inner_sum.value) / #unquantified)
+			local dist_amount = U.max(0, (outer.value - inner_sum.value) / #unspecified)
 			if dist_amount > 0 then
-				for _, item in ipairs(unquantified) do
+				for _, item in ipairs(unspecified) do
 					item.measurements = {Measurement(dist_amount, common_unit, 0, 0, false)}
 					normalize_unit_impl(item, outer)
 				end
