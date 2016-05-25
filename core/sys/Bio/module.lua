@@ -18,7 +18,10 @@ local munit_gram = Measurement.get_unit("g")
 local chemical_id_hash = O.hash_name("chemical")
 
 function M.normalize_measurement(m)
-	if m.qindex ~= Measurement.QuantityIndex.mass then
+	if m.qindex == Measurement.QuantityIndex.dimensionless then
+		m.of = m.of + m.value
+		m.value = 0
+	elseif m.qindex ~= quantity_mass.index then
 		if m:quantity().tangible then
 			m:rebase(quantity_mass.UnitByMagnitude[m.magnitude])
 		else
