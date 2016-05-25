@@ -16,7 +16,6 @@ U.class(M)
 
 function M:__init(item, amount)
 	self.children = {}
-	self.amount = amount or Measurement(0)
 
 	if not item then
 		self.item = nil
@@ -26,6 +25,10 @@ function M:__init(item, amount)
 		self.item = item
 	else
 		U.assert(false, "unsupported item type: '%s'", type(item))
+	end
+
+	if not self.amount then
+		amount = Measurement(0, munit_gram)
 	end
 end
 
