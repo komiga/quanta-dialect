@@ -84,17 +84,24 @@ function NotFoundModifier:compare_equal(other)
 	return true
 end
 
+local debug_thing_type_name = {
+	[Entity] = "Entity",
+	[Unit] = "Unit",
+	[Unit.Element] = "Unit.Element",
+}
+
 local function debug_searcher_wrapper(name, searcher)
 	return function(resolver, parent, unit)
 		local thing, variant, terminate = searcher(resolver, parent, unit)
 		U.print(
-			"%12s %s %s $%d$%d => %s",
+			"%12s %s %s $%d$%d => %s %s",
 			name,
 			unit.scope and date_to_string(unit.scope) or "____-__-__",
 			unit.id,
 			unit.source,
 			unit.sub_source,
-			thing ~= nil and "found" or "..."
+			thing ~= nil and "found" or "...",
+			thing ~= nil and (debug_thing_type_name[U.type_class(thing)] or "<unknown type>") or ""
 		)
 		return thing, variant, terminate
 	end
