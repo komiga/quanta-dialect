@@ -83,7 +83,6 @@ function M.normalize_unit_measurements(unit, outer)
 		end
 		unit.measurements = {specified}
 		if outer then
-			-- specified:rebase(outer:unit())
 			unit._factor = specified.value / outer.value * (10 ^ (specified.magnitude - outer.magnitude))
 		end
 		return specified
@@ -111,6 +110,7 @@ local function normalize_unit_impl(unit, outer)
 
 	local common_unit = outer and outer:unit()
 	-- U.log("%s :: %s", unit.id, common_unit and common_unit.name or "none")
+
 	if unit.id_hash == chemical_id_hash and unit.thing then
 		if not common_unit then
 			common_unit = munit_milligram
@@ -193,7 +193,7 @@ local function normalize_unit_impl(unit, outer)
 					inner_sum:add(m)
 				end
 				table.insert(specified, item)
-			else
+			elseif not item:is_empty() then
 				table.insert(unspecified, item)
 			end
 		end
