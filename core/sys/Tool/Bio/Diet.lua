@@ -39,29 +39,14 @@ local function collect_actions(t)
 	end
 end
 
-local function print_stat(stat, left)
-	local str = "__NIL__"
-	if U.is_type(stat.item, "string") then
-		str = stat.item
-	elseif U.is_instance(stat.item, Unit) then
-		local unit = stat.item
-		local tmp_items = unit.items
-		local tmp_parts = unit.parts
-		unit.items = {}
-		unit.parts = {}
-
-		local obj = unit:to_object()
-		str = O.write_text_string(obj, true)
-		if unit.type == Unit.Type.composition then
-			str = "<composition>" .. string.sub(str, 5)
-		end
-
-		unit.items = tmp_items
-		unit.parts = tmp_parts
-	end
-	Tool.log("%s%s", string.rep(' ', left), str)
+local function print_stat(stat, obj, left)
+	Tool.log(
+		"%s%s",
+		string.rep(' ', left),
+		O.write_text_string(stat:to_object(obj), true)
+	)
 	for _, s in ipairs(stat.children) do
-		print_stat(s, left + 2)
+		print_stat(s, obj, left + 2)
 	end
 end
 
@@ -253,12 +238,12 @@ function(self, parent, options, params)
 		Tool.log("\nstats:")
 		t.stat = Stat()
 		for _, g in ipairs(t.groups) do
-			g.stat = Stat(g.name)
+			g.stat = Stat("group " .. g.name)
 			for _, action in ipairs(g.actions) do
 				g.stat:add(action.data.composition)
 			end
 			t.stat:add(g.stat)
-			print_stat(g.stat, 0)
+			print_stat(g.stat, obj, 0)
 		end
 	end
 end)
