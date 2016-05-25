@@ -130,6 +130,7 @@ function(self, parent, options, params)
 		return true
 	end
 
+	Bio.debug = self.data.debug
 	local universe, msg = Entity.read_universe(Vessel.data_path("entity/u_nutrition.q"))
 	if not universe then
 		return Tool.log_error(msg)
