@@ -220,16 +220,22 @@ function(self, parent, options, params)
 		collect_actions(t)
 
 		for _, g in ipairs(t.groups) do
-			Tool.log("group %s:", g.name)
+			if self.data.debug then
+				Tool.log("group %s:", g.name)
+			end
 			for _, action in ipairs(g.actions) do
 				resolve_and_mark(resolver, action.data.composition)
 
-				local text = O.write_text_string(action.data.composition:to_object(obj), false)
-				text = string.gsub(text, "\t", "  ")
-				text = string.gsub(text, "\n", "\n  ")
-				Tool.log("  %s", text)
+				if self.data.debug then
+					local text = O.write_text_string(action.data.composition:to_object(obj), false)
+					text = string.gsub(text, "\t", "  ")
+					text = string.gsub(text, "\n", "\n  ")
+					Tool.log("  %s", text)
+				end
 			end
-			Tool.log("")
+			if self.data.debug then
+				Tool.log("")
+			end
 		end
 		if t.local_units then
 			resolver:pop()
