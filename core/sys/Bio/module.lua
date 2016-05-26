@@ -93,6 +93,21 @@ function M.normalize_unit_measurements(unit, outer)
 	return outer
 end
 
+function M.normalize_element(element)
+	if element._normalized then
+		return
+	end
+	element._steps_joined = Unit.Composition()
+	for _, step in ipairs(element.steps) do
+		M.normalize_unit(step.composition)
+		for _, item in ipairs(step.composition.items) do
+			table.insert(element._steps_joined, item)
+		end
+	end
+	M.normalize_unit(element._steps_joined)
+	element._normalized = true
+end
+
 local function normalize_unit_impl(unit, outer)
 	if unit._normalized then
 		return
@@ -163,21 +178,16 @@ local function normalize_unit_impl(unit, outer)
 		end
 	elseif unit.type == Unit.Type.definition then
 		for _, item in ipairs(unit.items) do
-			for _, step in ipairs(item.steps) do
-				M.normalize_unit(step.composition)
-			end
+			M.normalize_element(item)
 		end
 		for _, part in ipairs(unit.parts) do
-			for _, step in ipairs(part.steps) do
-				M.normalize_unit(step.composition)
-			end
+			M.normalize_element(part)
 		end
 		if #unit.measurements > 0 then
 			local p1 = unit.parts[1]
 			if p1 then
-				local composition = U.table_last(p1.steps).composition
-				composition.measurements = unit.measurements
-				-- FIXME: what to do, what to do
+				U.table_last(p1.steps).composition.measurements = unit.measurements
+				p1._steps_joined.measurements = unit.measurements
 				unit.measurements = {}
 			end
 		end
