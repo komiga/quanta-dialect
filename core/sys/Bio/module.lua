@@ -107,10 +107,8 @@ local function normalize_unit_impl(unit, outer)
 
 	-- TODO: use average mass of thing if unit only measures number of instances
 	-- TODO: use typical/average measurement of thing if unspecified
-	-- TODO: depreciate to single entity if outer.of > 1
 
 	outer = M.normalize_unit_measurements(unit, outer)
-
 	local common_unit = outer and outer:unit()
 	-- U.log("%s :: %s", unit.id, common_unit and common_unit.name or "none")
 
@@ -161,6 +159,26 @@ local function normalize_unit_impl(unit, outer)
 				item.measurements = {Measurement(item._factor * outer.value, common_unit, item._num_atoms, 0, outer.certain)}
 			else
 				item.measurements = {Measurement(item._factor, munit_ratio, item._num_atoms, 0, true)}
+			end
+		end
+	elseif unit.type == Unit.Type.definition then
+		for _, item in ipairs(unit.items) do
+			for _, step in ipairs(item.steps) do
+				M.normalize_unit(step.composition)
+			end
+		end
+		for _, part in ipairs(unit.parts) do
+			for _, step in ipairs(part.steps) do
+				M.normalize_unit(step.composition)
+			end
+		end
+		if #unit.measurements > 0 then
+			local p1 = unit.parts[1]
+			if p1 then
+				local composition = U.table_last(p1.steps).composition
+				composition.measurements = unit.measurements
+				-- FIXME: what to do, what to do
+				unit.measurements = {}
 			end
 		end
 	elseif #unit.items > 0 then
@@ -217,12 +235,6 @@ local function normalize_unit_impl(unit, outer)
 					normalize_unit_impl(item, outer)
 				end
 			end
-		end
-	end
-
-	for _, part in ipairs(unit.parts) do
-		for _, step in ipairs(part.steps) do
-			M.normalize_unit(step.composition)
 		end
 	end
 end
