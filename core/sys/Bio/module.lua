@@ -82,7 +82,7 @@ function M.normalize_unit_measurements(unit, outer)
 		for i = 2, #unit.measurements do
 			local m = unit.measurements[i]
 			M.normalize_measurement(m)
-			specified:add(m.value)
+			specified:add(m)
 		end
 		unit.measurements = {specified}
 		if outer then
