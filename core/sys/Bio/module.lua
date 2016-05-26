@@ -101,7 +101,7 @@ function M.normalize_element(element)
 	for _, step in ipairs(element.steps) do
 		M.normalize_unit(step.composition)
 		for _, item in ipairs(step.composition.items) do
-			table.insert(element._steps_joined, item)
+			table.insert(element._steps_joined.items, item)
 		end
 	end
 	M.normalize_unit(element._steps_joined)
