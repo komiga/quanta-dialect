@@ -183,14 +183,14 @@ local function normalize_unit_impl(unit, outer)
 		for _, part in ipairs(unit.parts) do
 			M.normalize_element(part)
 		end
-		if #unit.measurements > 0 then
+		--[[if #unit.measurements > 0 then
 			local p1 = unit.parts[1]
 			if p1 then
 				U.table_last(p1.steps).composition.measurements = unit.measurements
 				p1._steps_joined.measurements = unit.measurements
 				unit.measurements = {}
 			end
-		end
+		end--]]
 	elseif #unit.items > 0 then
 		if not common_unit then
 			common_unit = munit_gram
