@@ -248,7 +248,9 @@ function(self, parent, options, params)
 		for _, g in ipairs(t.groups) do
 			g.stat = Stat("group " .. g.name)
 			for _, action in ipairs(g.actions) do
-				g.stat:add(action.data.composition)
+				for _, item in ipairs(action.data.composition.items) do
+					g.stat:add(item)
+				end
 			end
 			t.stat:add(g.stat)
 			print_stat(g.stat, obj, 0)
