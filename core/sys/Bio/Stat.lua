@@ -36,7 +36,7 @@ function M:add(item, amount)
 	U.assert(item ~= nil)
 	if U.is_instance(item, M) then
 		table.insert(self.children, item)
-	else
+	elseif not U.is_instance(item, Unit) or not item:is_empty() then
 		table.insert(self.children, M(item, amount))
 	end
 end
