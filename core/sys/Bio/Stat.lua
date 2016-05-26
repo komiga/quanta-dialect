@@ -19,7 +19,7 @@ function M:__init(item, amount)
 
 	if not item then
 		self.item = nil
-	elseif U.is_instance(item, Unit) then
+	elseif U.is_instance(item, Unit) or U.is_instance(item, Unit.Element) then
 		self:_expand(item, amount)
 	elseif U.is_type(item, "string") then
 		self.item = item
@@ -52,14 +52,16 @@ function M:to_object(obj)
 		O.set_string(obj, "__EMPTY__")
 	elseif U.is_type(self.item, "string") then
 		O.set_string(obj, self.item)
-	elseif U.is_instance(self.item, Unit) then
+	elseif U.is_instance(self.item, Unit.Element) then
+		O.set_identifier(obj, self.item:name())
+	else
 		local unit = self.item
 		local tmp_items = unit.items
 		local tmp_parts = unit.parts
 		local tmp_measurements = unit.measurements
 		unit.items = {}
 		unit.parts = {}
-		unit.measurements = {self.amount}
+		unit.measurements = {}
 
 		obj = unit:to_object(obj)
 		if unit.type == Unit.Type.composition then
@@ -70,6 +72,7 @@ function M:to_object(obj)
 		unit.items = tmp_items
 		unit.parts = tmp_parts
 	end
+	Measurement.struct_list_to_quantity({self.amount}, obj)
 	return obj
 end
 
@@ -88,12 +91,18 @@ function M:_expand(unit, amount)
 	-- definition
 	--   FH{..}[..]
 	--   FH{P1 = {}[..], P2 = {}[..]}
+	-- element
 
 	if not unit._normalized then
 		unit = unit:make_copy()
-		Bio.normalize_unit(unit)
+		Bio.normalize(unit)
 	end
+	self.item = unit
 
+	local is_element = U.is_instance(unit, Unit.Element)
+	if is_element then
+		unit = unit._steps_joined
+	end
 	local base_amount = unit.measurements[1]
 	local common_unit = base_amount and base_amount:unit() or munit_gram
 	if not amount then
@@ -102,29 +111,39 @@ function M:_expand(unit, amount)
 	amount = amount:make_copy()
 	amount:rebase(common_unit)
 	if base_amount then
-		if amount.of == 0 then
-			amount.of = base_amount.of
-		end
 		if amount:is_exact() then
 			amount.approximation = base_amount.approximation
 			amount.certain = base_amount.certain
 		end
+		if amount.of == 0 then
+			amount.of = base_amount.of
+		end
+		if amount.value == 0 then
+			amount.value = amount.of * base_amount.value
+		end
 	end
 	Bio.normalize_measurement(amount)
 	amount.value = amount.value * unit._factor
-
-	self.item = unit
+	if amount.value ~= 0 and amount.of == 1 then
+		amount.of = 0
+	end
 	self.amount = amount
 
-	if unit.type == Unit.Type.reference then
+	unit = self.item
+	if is_element then
+		for _, item in ipairs(unit._steps_joined.items) do
+			self:add(item, amount)
+		end
+	elseif unit.type == Unit.Type.reference then
 		if unit.thing then
 			if #unit.items == 0 then -- direct
 				if U.is_instance(unit.thing, Entity) then
 					self:_expand_entity(unit.thing, unit.thing_variant, amount)
 				elseif U.is_instance(unit.thing, Unit.Element) then
-					self:_expand_element(unit.thing, amount)
+					self:_expand(unit.thing, amount)
+					return
 				else
-					self:_expand_definition(unit.thing, amount)
+					self:add(unit.thing.parts[1], amount)
 				end
 			else -- compound or selection
 				for _, item in ipairs(unit.items) do
@@ -133,7 +152,7 @@ function M:_expand(unit, amount)
 			end
 		end
 	elseif unit.type == Unit.Type.definition then
-		self:_expand_definition(unit, amount)
+		self:add(unit.parts[1], amount)
 	else
 		for _, item in ipairs(unit.items) do
 			self:add(item, amount)
@@ -164,19 +183,6 @@ function M:_expand_entity(entity, variant, amount)
 		for _, item in ipairs(composition.items) do
 			self:add(item, amount)
 		end
-	end
-end
-
-function M:_expand_definition(unit, amount)
-	U.type_assert(unit, Unit)
-	local element = unit.parts[1]
-	self:_expand_element(element, amount)
-end
-
-function M:_expand_element(element, amount)
-	U.type_assert(element, Unit.Element)
-	for _, step in ipairs(element.steps) do
-		self:add(step.composition, amount)
 	end
 end
 
