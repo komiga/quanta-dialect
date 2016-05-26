@@ -93,18 +93,18 @@ function M.normalize_unit_measurements(unit, outer)
 	return outer
 end
 
-function M.normalize_element(element)
+local function normalize_element_impl(element, outer)
 	if element._normalized then
 		return
 	end
 	element._steps_joined = Unit.Composition()
 	for _, step in ipairs(element.steps) do
-		M.normalize_unit(step.composition)
+		M.normalize_unit(step.composition, outer)
 		for _, item in ipairs(step.composition.items) do
 			table.insert(element._steps_joined.items, item)
 		end
 	end
-	M.normalize_unit(element._steps_joined)
+	M.normalize_unit(element._steps_joined, outer)
 	element._normalized = true
 end
 
@@ -178,10 +178,10 @@ local function normalize_unit_impl(unit, outer)
 		end
 	elseif unit.type == Unit.Type.definition then
 		for _, item in ipairs(unit.items) do
-			M.normalize_element(item)
+			normalize_element_impl(item, nil)
 		end
 		for _, part in ipairs(unit.parts) do
-			M.normalize_element(part)
+			normalize_element_impl(part, nil)
 		end
 		--[[if #unit.measurements > 0 then
 			local p1 = unit.parts[1]
@@ -249,6 +249,16 @@ local function normalize_unit_impl(unit, outer)
 	end
 end
 
+function M.normalize_element(element, outer)
+	if outer then
+		if outer.qindex ~= quantity_mass.index then
+			outer = outer:make_copy()
+			outer:rebase(munit_gram)
+		end
+	end
+	normalize_element_impl(element, outer)
+end
+
 function M.normalize_unit(unit, outer)
 	if outer then
 		if outer.qindex ~= quantity_mass.index then
@@ -257,6 +267,16 @@ function M.normalize_unit(unit, outer)
 		end
 	end
 	normalize_unit_impl(unit, outer)
+end
+
+function M.normalize(thing, outer)
+	if U.is_instance(thing, Unit) then
+		M.normalize_unit(thing, outer)
+	elseif U.is_instance(thing, Unit.Element) then
+		M.normalize_element(thing, outer)
+	else
+		U.assert(false, "unrecognized type")
+	end
 end
 
 return M
