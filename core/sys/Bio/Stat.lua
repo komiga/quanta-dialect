@@ -135,20 +135,18 @@ function M:_expand(unit, amount)
 			self:add(item, amount)
 		end
 	elseif unit.type == Unit.Type.reference then
-		if unit.thing then
-			if #unit.items == 0 then -- direct
-				if U.is_instance(unit.thing, Entity) then
-					self:_expand_entity(unit.thing, unit.thing_variant, amount)
-				elseif U.is_instance(unit.thing, Unit.Element) then
-					self:_expand(unit.thing, amount)
-					return
-				else
-					self:add(unit.thing.parts[1], amount)
-				end
-			else -- compound or selection
-				for _, item in ipairs(unit.items) do
-					self:add(item, amount)
-				end
+		if unit.thing and #unit.items == 0 then -- direct
+			if U.is_instance(unit.thing, Entity) then
+				self:_expand_entity(unit.thing, unit.thing_variant, amount)
+			elseif U.is_instance(unit.thing, Unit.Element) then
+				self:_expand(unit.thing, amount)
+				return
+			else
+				self:add(unit.thing.parts[1], amount)
+			end
+		else -- compound or selection
+			for _, item in ipairs(unit.items) do
+				self:add(item, amount)
 			end
 		end
 	elseif unit.type == Unit.Type.definition then
