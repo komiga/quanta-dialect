@@ -245,6 +245,19 @@ local function normalize_unit_impl(unit, outer)
 					normalize_unit_impl(item, outer)
 				end
 			end
+		elseif outer.value ~= 0 and outer.value ~= inner_sum.value then
+			local imbalance = outer.value - inner_sum.value
+			U.log("imbalance @ %s: %f - %f = %f", unit.id, outer.value, inner_sum.value, imbalance)
+			local imbalance_unit = Unit.Reference()
+			if imbalance > 0 then
+				imbalance_unit:set_id("unknown.underflow")
+			else
+				imbalance_unit:set_id("unknown.overflow")
+			end
+			table.insert(imbalance_unit.measurements, Measurement(imbalance, common_unit, 0, 0, inner_sum.certain))
+			M.resolve_func(imbalance_unit)
+			normalize_unit_impl(imbalance_unit, outer)
+			table.insert(unit.items, imbalance_unit)
 		end
 	end
 end
