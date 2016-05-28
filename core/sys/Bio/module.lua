@@ -80,7 +80,9 @@ function M.normalize_unit_measurements(unit, outer)
 		for i = 2, #unit.measurements do
 			local m = unit.measurements[i]
 			M.normalize_measurement(m)
-			specified:add(m)
+			if m.qindex == specified.qindex then
+				specified:add(m)
+			end
 		end
 		unit.measurements = {specified}
 		if outer then
