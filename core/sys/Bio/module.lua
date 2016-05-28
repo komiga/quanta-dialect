@@ -54,8 +54,6 @@ function M.normalize_measurement(m)
 	elseif m.qindex ~= quantity_mass.index then
 		if m:quantity().tangible then
 			m:rebase(quantity_mass.UnitByMagnitude[m.magnitude])
-		else
-			m:rebase(munit_gram)
 		end
 	end
 end
