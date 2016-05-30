@@ -52,8 +52,8 @@ function M.normalize_measurement(m)
 		m.of = m.of + m.value
 		m.value = 0
 	elseif m.qindex ~= quantity_mass.index then
-		if m:quantity().tangible then
-			m:rebase(quantity_mass.UnitByMagnitude[m.magnitude])
+		if m:is_convertible(quantity_mass) then
+			m:convert(quantity_mass.unit_by_magnitude[m.magnitude] or munit_gram)
 		end
 	end
 end
@@ -147,7 +147,7 @@ local function normalize_unit_impl(unit, outer)
 				if m.qindex == Measurement.QuantityIndex.mass then
 					if specified_mass == 0 then
 						common_unit = m:unit()
-						inner_sum:rebase(common_unit)
+						inner_sum:convert(common_unit)
 					end
 					inner_sum:add(m)
 					specified_mass = specified_mass + item._factor
@@ -198,7 +198,7 @@ local function normalize_unit_impl(unit, outer)
 				if #item.measurements > 0 then
 					local m = item.measurements[1]
 					if m:quantity().tangible then
-						common_unit = quantity_mass.UnitByMagnitude[m.magnitude]
+						common_unit = quantity_mass.unit_by_magnitude[m.magnitude]
 						U.assert(common_unit)
 						break
 					end
