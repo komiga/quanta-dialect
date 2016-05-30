@@ -84,7 +84,7 @@ function M:to_object(obj)
 	return obj
 end
 
-function M:_expand(unit, amount)
+function M:_expand(unit, outer)
 	-- inputs:
 	-- ref to entity
 	-- ref to entity (compound)
@@ -107,34 +107,29 @@ function M:_expand(unit, amount)
 	end
 	self.item = unit
 
+	local is_unit_part = unit.thing and not U.is_instance(unit.thing, Unit.Entity)
 	local is_element = U.is_instance(unit, Unit.Element)
 	if is_element then
 		unit = unit._steps_joined
 	end
-	local base_amount = unit.measurements[1]
-	local common_unit = base_amount and base_amount:unit() or munit_gram
-	if not amount then
-		amount = base_amount or Measurement(0, common_unit)
-	end
-	amount = amount:make_copy()
-	amount:rebase(common_unit)
-	if base_amount then
-		if amount:is_exact() then
-			amount.approximation = base_amount.approximation
-			amount.certain = base_amount.certain
+	local amount = unit.measurements[1]
+	if amount then
+		amount = amount:make_copy()
+		if outer then
+			if outer.value > 0 then
+				amount.value = unit._factor * (outer.value * 10 ^ (outer.magnitude - amount.magnitude))
+			else
+				amount.value = amount.value * outer.of
+			end
 		end
-		if amount.of == 0 then
-			amount.of = base_amount.of
-		end
-		if amount.value == 0 then
-			amount.value = amount.of * base_amount.value
-		end
+	else
+		amount = outer:make_copy()
 	end
 	Bio.normalize_measurement(amount)
-	amount.value = amount.value * unit._factor
-	if amount.value ~= 0 and amount.of == 1 then
+
+	--[[if amount.value ~= 0 and amount.of == 1 then
 		amount.of = 0
-	end
+	end--]]
 	self.amount = amount
 
 	unit = self.item
