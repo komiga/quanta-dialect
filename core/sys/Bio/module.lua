@@ -220,7 +220,7 @@ local function normalize_unit_impl(unit, outer)
 			if #item.measurements > 0 then
 				normalize_unit_impl(item, outer)
 				local m = item.measurements[1]
-				if m.qindex == quantity_mass.index then
+				if m.qindex == inner_sum.qindex then
 					inner_sum:add(m)
 				end
 				table.insert(specified, item)
