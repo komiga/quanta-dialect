@@ -16,6 +16,7 @@ U.class(M)
 
 function M:__init(item, amount)
 	self.children = {}
+	self.item_tangible = nil
 
 	if not item then
 		self.item = nil
@@ -54,6 +55,7 @@ function M:to_object(obj)
 		O.set_string(obj, self.item)
 	elseif U.is_instance(self.item, Unit.Element) then
 		O.set_identifier(obj, self.item:name())
+		-- Measurement.struct_list_to_quantity(self.item._steps_joined.measurements, obj)
 	else
 		local unit = self.item
 		local tmp_items = unit.items
@@ -73,6 +75,12 @@ function M:to_object(obj)
 		unit.parts = tmp_parts
 	end
 	Measurement.struct_list_to_quantity({self.amount}, obj)
+	if self.item_tangible then
+		local tag = O.push_tag(obj)
+		O.set_name(tag, "tangible_item")
+		tag = O.push_child(tag)
+		O.set_identifier(tag, self.item_tangible:ref())
+	end
 	return obj
 end
 
@@ -167,17 +175,24 @@ function M:_expand_entity(entity, variant, amount)
 	end
 
 	local composition
-	if #variant.data.nutrients > 0 then
-		local profile = variant.data.nutrients[1]
-		profile:normalize()
-		composition = profile.composition
-	elseif #variant.composition.items > 0 then
-		composition = variant.composition
-		Bio.resolve_func(composition)
-		Bio.normalize_unit(composition, #composition.measurements == 0 and amount)
+	while entity and not entity:is_universe() do
+		if U.is_instance(entity.data, Nutrient) and #variant.data.nutrients > 0 then
+			local profile = variant.data.nutrients[1]
+			profile:normalize()
+			composition = profile.composition
+		elseif #variant.composition.items > 0 then
+			composition = variant.composition
+			Bio.resolve_func(composition)
+			Bio.normalize_unit(composition, #composition.measurements == 0 and amount)
+		end
+		if composition then
+			break
+		end
+		entity = entity.parent
+		variant = entity.generic
 	end
-
 	if composition then
+		self.item_tangible = entity
 		for _, item in ipairs(composition.items) do
 			self:add(item, amount)
 		end
