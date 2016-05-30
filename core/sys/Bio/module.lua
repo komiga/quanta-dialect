@@ -264,20 +264,16 @@ end
 
 function M.normalize_element(element, outer)
 	if outer then
-		if outer.qindex ~= quantity_mass.index then
-			outer = outer:make_copy()
-			outer:rebase(munit_gram)
-		end
+		outer = outer:make_copy()
+		M.normalize_measurement(outer)
 	end
 	normalize_element_impl(element, outer)
 end
 
 function M.normalize_unit(unit, outer)
 	if outer then
-		if outer.qindex ~= quantity_mass.index then
-			outer = outer:make_copy()
-			outer:rebase(munit_gram)
-		end
+		outer = outer:make_copy()
+		M.normalize_measurement(outer)
 	end
 	normalize_unit_impl(unit, outer)
 end
