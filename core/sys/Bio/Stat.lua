@@ -169,6 +169,7 @@ function M:_expand_entity(entity, variant, amount)
 		variant = entity.generic
 	end
 
+	local ref_entity = entity
 	local composition
 	while entity and not entity:is_universe() do
 		if U.is_instance(entity.data, Nutrient) and #variant.data.nutrients > 0 then
@@ -187,7 +188,9 @@ function M:_expand_entity(entity, variant, amount)
 		variant = entity.generic
 	end
 	if composition then
-		self.item_tangible = entity
+		if entity ~= ref_entity then
+			self.item_tangible = entity
+		end
 		for _, item in ipairs(composition.items) do
 			self:add(item, amount)
 		end
