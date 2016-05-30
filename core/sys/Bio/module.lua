@@ -240,14 +240,15 @@ local function normalize_unit_impl(unit, outer)
 			-- TODO: maybe a better way to handle this?
 			local dist_amount = U.max(0, (outer.value - inner_sum.value) / #unspecified)
 			if dist_amount > 0 then
+				local dist = Measurement(dist_amount, common_unit, 0, 0, #unspecified == 1)
 				for _, item in ipairs(unspecified) do
-					item.measurements = {Measurement(dist_amount, common_unit, 0, 0, #unspecified == 1)}
+					item.measurements = {dist:make_copy()}
 					normalize_unit_impl(item, outer)
 				end
 			end
 		elseif outer.value ~= 0 and outer.value ~= inner_sum.value then
 			local imbalance = outer.value - inner_sum.value
-			U.log("imbalance @ %s: %f - %f = %f", unit.id, outer.value, inner_sum.value, imbalance)
+			-- U.log("imbalance @ %s: %f - %f = %f", unit.id, outer.value, inner_sum.value, imbalance)
 			local imbalance_unit = Unit.Reference()
 			if imbalance > 0 then
 				imbalance_unit:set_id("unknown.underflow")
