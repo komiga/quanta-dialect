@@ -39,10 +39,10 @@ local function do_stats(stats, e)
 	if e:is_specialized() then
 		stats.num_specialized = stats.num_specialized + 1
 	end
-	for _, source in ipairs(e.generic.sources) do
+	for i, source in pairs(e.generic.sources) do
 		stats.num_sub_sources = stats.num_sub_sources + #source.sources
+		stats.num_sources = stats.num_sources + 1
 	end
-	stats.num_sources = stats.num_sources + #e.generic.sources
 	stats.num_total = stats.num_total + 1
 end
 
@@ -102,13 +102,13 @@ local function print_hierarchy(stats, root)
 			)
 		end
 		if e:any_sources() then
-			for n, s in ipairs(e.generic.sources) do
+			for n, s in pairs(e.generic.sources) do
 				Tool.log(
 					"  S %s \"%s\"",
 					left_column(tostring(n), i, 55),
 					describe_source(s) or ""
 				)
-				for sub_n, sub_s in ipairs(s.sources) do
+				for sub_n, sub_s in pairs(s.sources) do
 					Tool.log(
 						"   S %s \"%s\"",
 						left_column(tostring(sub_n), i, 54),
