@@ -115,6 +115,8 @@ function(self, parent, options, params)
 		if p.name == "-d" then
 			self.data.debug = true
 			searcher_wrapper = debug_searcher_wrapper
+		elseif p.name == "-s" then
+			self.data.summary = true
 		else
 			return false
 		end
@@ -222,20 +224,20 @@ function(self, parent, options, params)
 		collect_actions(t)
 
 		for _, g in ipairs(t.groups) do
-			if self.data.debug then
+			if self.data.summary then
 				Tool.log("group %s:", g.name)
 			end
 			for _, action in ipairs(g.actions) do
 				resolve_and_mark(resolver, action.data.composition)
 
-				if self.data.debug then
+				if self.data.summary then
 					local text = O.write_text_string(action.data.composition:to_object(obj), false)
 					text = string.gsub(text, "\t", "  ")
 					text = string.gsub(text, "\n", "\n  ")
 					Tool.log("  %s", text)
 				end
 			end
-			if self.data.debug then
+			if self.data.summary then
 				Tool.log("")
 			end
 		end
@@ -243,17 +245,19 @@ function(self, parent, options, params)
 			resolver:pop()
 		end
 
-		Tool.log("\nstats:")
-		t.stat = Stat()
-		for _, g in ipairs(t.groups) do
-			g.stat = Stat("group " .. g.name)
-			for _, action in ipairs(g.actions) do
-				for _, item in ipairs(action.data.composition.items) do
-					g.stat:add(item)
+		if not self.data.summary then
+			Tool.log("\nstats:")
+			t.stat = Stat()
+			for _, g in ipairs(t.groups) do
+				g.stat = Stat("group " .. g.name)
+				for _, action in ipairs(g.actions) do
+					for _, item in ipairs(action.data.composition.items) do
+						g.stat:add(item)
+					end
 				end
+				t.stat:add(g.stat)
+				print_stat(g.stat, obj, 0)
 			end
-			t.stat:add(g.stat)
-			print_stat(g.stat, obj, 0)
 		end
 	end
 end)
@@ -261,6 +265,7 @@ end)
 command.auto_read_options = false
 command.default_data = {
 	debug = false,
+	summary = false,
 }
 
 return command
