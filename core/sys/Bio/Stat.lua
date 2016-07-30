@@ -84,32 +84,8 @@ function M:to_object(obj)
 	return obj
 end
 
-function M:_expand(unit, outer)
-	-- inputs:
-	-- ref to entity
-	-- ref to entity (compound)
-	-- ref to unit
-	--   x[..] -> x{P1[..]}
-	--   x{P2[..]}
-	--   x{P1, P2}[..]
-	-- composition
-	--   {x[..], y[..]}
-	--   {x[..], y}[..]
-	--   {x, y}[..]
-	-- definition
-	--   FH{..}[..]
-	--   FH{P1 = {}[..], P2 = {}[..]}
-	-- element
-
-	if not unit._normalized then
-		unit = unit:make_copy()
-		Bio.normalize(unit)
-	end
-	self.item = unit
-
-	local is_unit_part = unit.thing and not U.is_instance(unit.thing, Unit.Entity)
-	local is_element = U.is_instance(unit, Unit.Element)
-	if is_element then
+function M._normalize_amount(unit, outer)
+	if U.is_instance(unit, Unit.Element) then
 		unit = unit._steps_joined
 	end
 	local amount = unit.measurements[1]
@@ -126,35 +102,39 @@ function M:_expand(unit, outer)
 		amount = outer:make_copy()
 	end
 	Bio.normalize_measurement(amount)
-
 	--[[if amount.value ~= 0 and amount.of == 1 then
 		amount.of = 0
 	end--]]
-	self.amount = amount
+	return amount
+end
 
-	unit = self.item
-	if is_element then
-		for _, item in ipairs(unit._steps_joined.items) do
-			self:add(item, amount)
-		end
-	elseif unit.type == Unit.Type.reference then
-		if unit.thing and #unit.items == 0 then -- direct
-			if U.is_instance(unit.thing, Entity) then
-				self:_expand_entity(unit.thing, unit.thing_variant, amount)
-			elseif U.is_instance(unit.thing, Unit.Element) then
-				self:_expand(unit.thing, amount)
-				return
-			else
-				self:add(unit.thing.parts[1], amount)
-			end
-		else -- compound or selection
-			for _, item in ipairs(unit.items) do
-				self:add(item, amount)
-			end
+function M:_expand(unit, outer)
+	if not unit._normalized then
+		unit = unit:make_copy()
+		Bio.normalize(unit)
+	end
+	self.item = unit
+	-- if not self.amount then
+		self.amount = M._normalize_amount(unit, outer)
+	-- end
+	self:_expand_parts(unit, self.amount)
+end
+
+function M:_expand_parts(unit, amount)
+	if U.is_instance(unit, Unit.Element) then
+		unit = unit._steps_joined
+	end
+	if unit.type == Unit.Type.reference and unit.thing and #unit.items == 0 then
+		if U.is_instance(unit.thing, Entity) then
+			self:_expand_entity(unit.thing, unit.thing_variant, amount)
+		elseif U.is_instance(unit.thing, Unit.Element) then
+			self:_expand(unit.thing, amount)
+		else
+			self:add(unit.thing.parts[1], amount)
 		end
 	elseif unit.type == Unit.Type.definition then
 		self:add(unit.parts[1], amount)
-	else
+	else -- composition or compound
 		for _, item in ipairs(unit.items) do
 			self:add(item, amount)
 		end
@@ -176,7 +156,7 @@ function M:_expand_entity(entity, variant, amount)
 			local profile = variant.data.nutrients[1]
 			profile:normalize()
 			composition = profile.composition
-		elseif #variant.composition.items > 0 then
+		elseif not variant.composition:is_empty() then
 			composition = variant.composition
 			Bio.resolve_func(composition)
 			Bio.normalize_unit(composition, #composition.measurements == 0 and amount)
@@ -191,9 +171,14 @@ function M:_expand_entity(entity, variant, amount)
 		if entity ~= ref_entity then
 			self.item_tangible = entity
 		end
-		for _, item in ipairs(composition.items) do
-			self:add(item, amount)
-		end
+		-- U.print("_expand_entity: %s", O.write_text_string(composition:to_object(), true))
+		--[[if composition.type == Unit.Type.composition then
+			for _, item in ipairs(composition.items) do
+				self:add(item, amount)
+			end
+		else--]]
+			self:_expand(composition, amount)
+		-- end
 	end
 end
 
