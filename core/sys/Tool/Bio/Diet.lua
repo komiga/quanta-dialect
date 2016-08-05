@@ -22,7 +22,7 @@ local function collect_actions(t)
 	t.groups = {}
 	for _, entry in ipairs(t.tracker.entries) do
 		for _, action in ipairs(entry.actions) do
-			if action_filter[U.type_class(action.data)] then
+			if action_filter[U.type_class(action.data)] and not action.data.prep then
 				local name = Dialect.Bio.Nutrition.group(action)
 				local g = t.groups[name]
 				if not g then
