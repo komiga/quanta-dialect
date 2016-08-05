@@ -22,6 +22,7 @@ M.Eat = Dialect.make_action(
 function(class)
 
 function class:__init(group, binge, composition)
+	self.prep = false
 	self.group = U.type_assert(group, "string", true) or nil
 	self.binge = U.type_assert(binge, "boolean", true) or false
 	self.composition = U.type_assert(composition, Unit, true) or Unit.Composition()
@@ -75,12 +76,29 @@ M.Drugtake = Dialect.make_action(
 function(class)
 
 function class:__init(composition)
+	self.prep = false
 	self.composition = U.type_assert(composition, Unit, true) or Unit.Composition()
 end
 
 function class:to_object(action, obj)
 	self.composition:to_object(obj)
 end
+
+-- TODO: proper variant system
+class.t_head_tags:add({
+Match.Pattern{
+	name = "init",
+	acceptor = function(context, self, obj)
+	self.prep = true
+	end,
+},
+Match.Pattern{
+	name = "post",
+	acceptor = function(context, self, obj)
+	self.prep = true
+	end,
+},
+})
 
 class.t_body:add({
 Match.Pattern{
