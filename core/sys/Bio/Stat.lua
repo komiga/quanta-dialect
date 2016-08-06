@@ -21,7 +21,7 @@ function M:__init(item, amount)
 	if not item then
 		self.item = nil
 	elseif U.is_instance(item, Unit) or U.is_instance(item, Unit.Element) then
-		self:_expand(item, amount)
+		self.item = self:_expand(item, amount)
 	elseif U.is_type(item, "string") then
 		self.item = item
 	else
@@ -118,6 +118,7 @@ function M:_expand(unit, outer)
 		self.amount = M._normalize_amount(unit, outer)
 	-- end
 	self:_expand_parts(unit, self.amount)
+	return unit
 end
 
 function M:_expand_parts(unit, amount)
@@ -128,7 +129,7 @@ function M:_expand_parts(unit, amount)
 		if U.is_instance(unit.thing, Entity) then
 			self:_expand_entity(unit.thing, unit.thing_variant, amount)
 		elseif U.is_instance(unit.thing, Unit.Element) then
-			self:_expand(unit.thing, amount)
+			self.item = self:_expand(unit.thing, amount)
 		else
 			self:add(unit.thing.parts[1], amount)
 		end
