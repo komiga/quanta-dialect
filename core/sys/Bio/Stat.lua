@@ -20,7 +20,7 @@ function M:__init(item, amount)
 
 	if not item then
 		self.item = nil
-	elseif U.is_instance(item, Unit) or U.is_instance(item, Unit.Element) then
+	elseif U.is_instance(item, Unit) then
 		self.item = self:_expand(item, amount)
 	elseif U.is_type(item, "string") then
 		self.item = item
@@ -53,16 +53,14 @@ function M:to_object(obj)
 		O.set_string(obj, "__EMPTY__")
 	elseif U.is_type(self.item, "string") then
 		O.set_string(obj, self.item)
-	elseif U.is_instance(self.item, Unit.Element) then
-		O.set_identifier(obj, self.item:name())
+	elseif self.item.type == Unit.Type.element then
+		O.set_identifier(obj, self.item.name)
 		-- Measurement.struct_list_to_quantity(self.item._steps_joined.measurements, obj)
 	else
 		local unit = self.item
 		local tmp_items = unit.items
-		local tmp_parts = unit.parts
 		local tmp_measurements = unit.measurements
 		unit.items = {}
-		unit.parts = {}
 		unit.measurements = {}
 
 		obj = unit:to_object(obj)
@@ -72,7 +70,6 @@ function M:to_object(obj)
 
 		unit.measurements = tmp_measurements
 		unit.items = tmp_items
-		unit.parts = tmp_parts
 	end
 	Measurement.struct_list_to_quantity({self.amount}, obj)
 	if self.item_tangible then
@@ -85,9 +82,6 @@ function M:to_object(obj)
 end
 
 function M._normalize_amount(unit, outer)
-	if U.is_instance(unit, Unit.Element) then
-		unit = unit._steps_joined
-	end
 	local amount = unit.measurements[1]
 	if amount then
 		amount = amount:make_copy()
@@ -122,20 +116,21 @@ function M:_expand(unit, outer)
 end
 
 function M:_expand_parts(unit, amount)
-	if U.is_instance(unit, Unit.Element) then
-		unit = unit._steps_joined
-	end
 	if unit.type == Unit.Type.reference and unit.thing and #unit.items == 0 then
 		if U.is_instance(unit.thing, Entity) then
 			self:_expand_entity(unit.thing, unit.thing_variant, amount)
-		elseif U.is_instance(unit.thing, Unit.Element) then
+		elseif unit.thing.type == Unit.Type.element then
 			self.item = self:_expand(unit.thing, amount)
 		else
-			self:add(unit.thing.parts[1], amount)
+			--[[self.item = --]]self:add(unit.thing:group(Unit.ElementType.primary)[1], amount)
 		end
-	elseif unit.type == Unit.Type.definition then
-		self:add(unit.parts[1], amount)
-	else -- composition or compound
+	elseif unit.type == Unit.Type.element then
+		for _, step in ipairs(unit.items) do
+			for _, item in ipairs(step.items) do
+				self:add(item, amount)
+			end
+		end
+	else -- definition, composition or compound
 		for _, item in ipairs(unit.items) do
 			self:add(item, amount)
 		end
