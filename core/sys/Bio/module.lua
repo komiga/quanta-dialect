@@ -93,21 +93,6 @@ function M.normalize_unit_measurements(unit, outer)
 	return outer
 end
 
-local function normalize_element_impl(element, outer)
-	if element._normalized then
-		return
-	end
-	element._steps_joined = Unit.Composition()
-	for _, step in ipairs(element.steps) do
-		M.normalize_unit(step.composition, outer)
-		for _, item in ipairs(step.composition.items) do
-			table.insert(element._steps_joined.items, item)
-		end
-	end
-	M.normalize_unit(element._steps_joined, outer)
-	element._normalized = true
-end
-
 local function normalize_unit_impl(unit, outer)
 	if unit._normalized then
 		return
@@ -176,21 +161,6 @@ local function normalize_unit_impl(unit, outer)
 				item.measurements = {Measurement(item._factor, munit_ratio, item._num_atoms, 0, true)}
 			end
 		end
-	elseif unit.type == Unit.Type.definition then
-		for _, item in ipairs(unit.items) do
-			normalize_element_impl(item, nil)
-		end
-		for _, part in ipairs(unit.parts) do
-			normalize_element_impl(part, nil)
-		end
-		--[[if #unit.measurements > 0 then
-			local p1 = unit.parts[1]
-			if p1 then
-				U.table_last(p1.steps).composition.measurements = unit.measurements
-				p1._steps_joined.measurements = unit.measurements
-				unit.measurements = {}
-			end
-		end--]]
 	elseif #unit.items > 0 then
 		if not common_unit then
 			common_unit = munit_gram
@@ -210,13 +180,6 @@ local function normalize_unit_impl(unit, outer)
 		local specified = {}
 		local unspecified = {}
 		for _, item in ipairs(unit.items) do
-			if #item.measurements == 0 then
-				if item.id_hash == chemical_id_hash and item.thing then
-					normalize_unit_impl(item, outer)
-				elseif not U.is_instance(item.thing, Entity) then
-					unit.measurements = {Measurement(0, munit_dimensionless, 1, 0, true)}
-				end
-			end
 			if #item.measurements > 0 then
 				normalize_unit_impl(item, outer)
 				local m = item.measurements[1]
@@ -235,6 +198,9 @@ local function normalize_unit_impl(unit, outer)
 			for _, item in ipairs(specified) do
 				local m = item.measurements[1]
 				item._factor = m.value / (inner_sum.value * (10 ^ (inner_sum.magnitude - m.magnitude)))
+			end
+			for _, item in ipairs(unspecified) do
+				normalize_unit_impl(item, nil)
 			end
 		elseif #unspecified > 0 then
 			-- TODO: maybe a better way to handle this?
@@ -263,14 +229,6 @@ local function normalize_unit_impl(unit, outer)
 	end
 end
 
-function M.normalize_element(element, outer)
-	if outer then
-		outer = outer:make_copy()
-		M.normalize_measurement(outer)
-	end
-	normalize_element_impl(element, outer)
-end
-
 function M.normalize_unit(unit, outer)
 	if outer then
 		outer = outer:make_copy()
@@ -282,8 +240,6 @@ end
 function M.normalize(thing, outer)
 	if U.is_instance(thing, Unit) then
 		M.normalize_unit(thing, outer)
-	elseif U.is_instance(thing, Unit.Element) then
-		M.normalize_element(thing, outer)
 	else
 		U.assert(false, "unrecognized type")
 	end
