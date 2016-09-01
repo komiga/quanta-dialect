@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+L_FILENAME="qm_quick.q"
+L_PATH_REMOTE="/sdcard/struct/quanta/$L_FILENAME"
+L_PATH_LOCAL="$QUANTA_VESSEL_DATA/mobile/$L_FILENAME"
+
+main() {
+
+	msg "syncing mobile (quick)"
+	adb shell am broadcast \
+		-p "com.komiga.quantamobile" \
+		-a "com.komiga.quantamobile.bridge.QUICK_EXPORT" \
+		--ez "clear" true \
+	> /dev/null
+	if [ $? != 0 ]; then
+		error "broadcast failed"
+		return 2
+	fi
+
+	adb pull \
+		"$L_PATH_REMOTE" \
+		"$L_PATH_LOCAL" \
+		> /dev/null
+	if [ $? != 0 ]; then
+		error "pull failed"
+		return 3
+	fi
+
+	sbt2 "$L_PATH_LOCAL:3"
+	return $?
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

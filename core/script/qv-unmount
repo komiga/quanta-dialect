@@ -1,0 +1,27 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+main() {
+	# set_logging_enabled false
+	if ! is_vessel_mounted && ! is_crypt_mounted; then
+		msg "vessel not mounted"
+		return 1
+	fi
+
+	msg "unmounting vessel"
+	if is_vessel_mounted && ! fusermount -u "$QUANTA_VESSEL"; then
+		msg "failed to unmount vessel"
+		return 2
+	fi
+	if is_crypt_mounted && ! umount "$QUANTA_CRYPT"; then
+		msg "failed to unmount crypt"
+		return 3
+	fi
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

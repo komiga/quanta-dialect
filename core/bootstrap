@@ -1,0 +1,9 @@
+
+export QUANTA_CORE="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+
+_quanta_bootstrap() {
+	source "$QUANTA_CORE/script/environment"
+}
+
+_quanta_bootstrap
+qv-load-config "core" "$QUANTA_CORE" $@

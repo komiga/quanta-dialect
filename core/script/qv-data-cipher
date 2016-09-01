@@ -1,0 +1,102 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+
+c_help() {
+	msg_local "usage: $SCRIPT_NAME (encrypt | decrypt) [--base64] [- | input]"
+	msg_local "default input is '-' (stdin); if input is not '-', it is taken as a string, not a file"
+}
+
+main() {
+	set_logging_enabled false
+
+	local mode="$1"
+	if [ -z "$mode" ]; then
+		error "expected command; see: \`$SCRIPT_NAME help\`"
+		return 1
+	fi
+
+	local encrypt=false
+	local cmd=
+
+	shift
+	case "$mode" in
+	"help")
+		c_help
+		return 0
+	;;
+
+	"encrypt")
+		encrypt=true
+		cmd="$QUANTA_CIPHER_ENCRYPT"
+	;;
+
+	"decrypt")
+		encrypt=false
+		cmd="$QUANTA_CIPHER_DECRYPT"
+	;;
+
+	*)
+		error "expected command, got '$cmd'"
+		return 1
+	;;
+	esac
+
+	while [[ $# != 0 ]]; do
+		local opt="$1"
+		case "$opt" in
+		"--base64")
+			if [[ $encrypt == true ]]; then
+				cmd="$cmd | base64 -w 0 -"
+			else
+				cmd="base64 -d - | $cmd"
+			fi
+		;;
+
+		*)
+			if [[ "${opt:0:2}" == "--" ]]; then
+				error "unrecognized option: $opt"
+			else
+				break
+			fi
+			return 2
+		;;
+		esac
+		shift
+	done
+
+	local input="-"
+	if [[ ! -z "$@" ]]; then
+		input="$@"
+	fi
+	if [[ "$input" == "-" ]]; then
+		input=`cat`
+	fi
+	if [[ -z "$input" ]]; then
+		error "failed to $mode: no input"
+		return 3
+	fi
+
+	# echo "$input" 1>&2
+	# echo "$cmd" 1>&2
+	local output=$(echo "$input" | eval "$cmd" 2>/dev/null)
+	local ret=$?
+	# echo "in-out: $(echo "$input" | wc -c) $(echo "$output" | wc -c)" 1>&2
+
+	if [[ $ret != 0 ]]; then
+		error "failed to $mode: operation failed"
+		return 4
+	elif [[ -z "$output" ]]; then
+		error "failed to $mode: no output"
+		return 5
+	fi
+	echo "$output"
+
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

@@ -1,0 +1,11 @@
+
+export QUANTA_VESSEL_UUID="__STORAGE_UUID__"
+export QUANTA_MOUNT_COMMAND="encfs"
+
+# export PATH="$PATH:$QUANTA_ROOT/local/bin"
+# export PATH="$PATH:$QUANTA_ROOT/vessel/bin"
+
+quanta_cipher_options="--batch --no-armor --no-comments --no-emit-version -r __GPG_USER__"
+export QUANTA_CIPHER_ENCRYPT="gpg2 $quanta_cipher_options -e -"
+export QUANTA_CIPHER_DECRYPT="gpg2 $quanta_cipher_options -d -"
+unset quanta_cipher_options

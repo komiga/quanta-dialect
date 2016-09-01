@@ -1,0 +1,28 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+main() {
+	if is_vessel_mounted; then
+		warning "vessel is already mounted"
+	else
+		msg "mounting vessel"
+		if ! is_crypt_mounted; then
+			if ! mount "$QUANTA_CRYPT"; then
+				msg "failed to mount crypt"
+				return 1
+			fi
+		fi
+		if ! "$QUANTA_MOUNT_COMMAND" "$QUANTA_CRYPT" "$QUANTA_VESSEL"; then
+			msg "failed to mount vessel"
+			return 2
+		fi
+		msg "vessel mounted"
+	fi
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

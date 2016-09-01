@@ -1,0 +1,49 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+main() {
+	local data="$1"
+	if [ -z "$data" ]; then
+		data="--filter=-_data/"
+	else
+		data="--filter=+_data/"
+	fi
+
+		# -vv \
+		# --dry-run \
+	msg "syncing"
+	local output="$(rsync \
+		-r -tpgo -Dl \
+		--delete-during \
+		--exclude-from="$QUANTA_CORE_SCRIPT/rsync-filters" \
+		$data \
+		--out-format="  %n%L" \
+		--log-file="$QUANTA_VESSEL_LOG/sync" \
+		"$QUANTA_VESSEL/" \
+		"$QUANTA_LOCAL/" \
+	)"
+
+	if [ $? != 0 ]; then
+		error "sync failed"
+		return 2
+	fi
+
+	if [ -z "$output" ]; then
+		msg "files: <none>"
+	else
+		output=$(
+			echo -n "$output" | \
+			sed -e 's|deleting|  ¡¡ DELETING !!|g' \
+			-e '/^  sys\/\.git.*/d'
+		)
+		msg "files:
+$output"
+	fi
+	return $?
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

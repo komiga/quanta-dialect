@@ -1,0 +1,5 @@
+
+export PATH="$PATH:$QUANTA_USER/bin"
+export PATH="$PATH:$QUANTA_CORE/bin"
+
+# qv-add-vessel "primary" "<vessel-root>" > /dev/null

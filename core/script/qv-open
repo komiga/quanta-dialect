@@ -1,0 +1,18 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+main() {
+	"$QUANTA_CORE_SCRIPT/qv-mount" || return $?
+	"$QUANTA_CORE_SCRIPT/qv-sync" || return $?
+
+	msg "opening Sublime project"
+	sbt2 --project "$QUANTA_VESSEL_SUBLIME/project.sublime-project" || return $?
+	#"$QUANTA_CORE_SCRIPT/qv-tracker" open || return $?
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

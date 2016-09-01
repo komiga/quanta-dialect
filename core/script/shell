@@ -1,0 +1,55 @@
+
+is_crypt_mounted() {
+	return $(mountpoint -q "$QUANTA_CRYPT" &> /dev/null)
+}
+
+is_vessel_mounted() {
+	return $(mountpoint -q "$QUANTA_VESSEL" &> /dev/null)
+}
+
+set_logging_enabled() {
+	_q_script_logging_enabled=$1
+}
+
+msg_local() {
+	echo "[$_q_script_name] $@"
+}
+
+warning_local() {
+	msg_local "warning: $@"
+}
+
+error_local() {
+	echo "[$_q_script_name] error: $@" 1>&2
+}
+
+put_script_log() {
+	if $_q_script_logging_enabled; then
+		local msg="[$(date '+%FT%H:%M:%S%:z') $(uname -n)] [$_q_script_name] $@"
+		if [ ! -d "$QUANTA_USER_LOG" ]; then
+			mkdir -p "$QUANTA_USER_LOG"
+		fi
+		echo "$msg" >> "$QUANTA_USER_LOG/script"
+
+		if $QUANTA_VESSEL_OPT_LOG && is_vessel_mounted; then
+			if [ ! -d "$QUANTA_VESSEL_LOG" ]; then
+				mkdir -p "$QUANTA_VESSEL_LOG"
+			fi
+			echo "$msg" >> "$QUANTA_VESSEL_LOG/script"
+		fi
+	fi
+}
+
+msg() {
+	msg_local "$@"
+	put_script_log "$@"
+}
+
+warning() {
+	msg "warning: $@"
+}
+
+error() {
+	error_local "$@"
+	put_script_log "error: $@"
+}

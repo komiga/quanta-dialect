@@ -1,0 +1,302 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+shopt -s extglob
+
+{
+
+L_PATH_CHRONO="$QUANTA_VESSEL_DATA/chrono"
+L_PATH_ACTIVE="$L_PATH_CHRONO/active"
+L_PATH_TEMPLATE="$L_PATH_CHRONO/template.q"
+
+f_is_time_valid() {
+	local t="$1"
+	if [ -z "$t" ]; then
+		return 1
+	fi
+	date -u -d "$t" &> /dev/null
+	if [ $? != 0 ]; then
+		return 1
+	fi
+	return 0
+}
+
+f_time() {
+	local t="$1"
+	local f="$2"
+	echo -n "$(date -u -d "$t" "+$f")"
+}
+
+f_time_secs() {
+	local t="$1"
+	echo -n "$(date -u -d "$t" "+@%s")"
+}
+
+f_time_now() {
+	echo -n "$(date -u "+@%s")"
+}
+
+f_time_slug() {
+	local t="$1"
+	echo -n "$(f_time "$t" "%Y/%m/%d")"
+}
+
+f_time_active() {
+	local t="$(f_time_now)"
+	if [ -f "$L_PATH_ACTIVE" ]; then
+		t=$(<$L_PATH_ACTIVE)
+	fi
+	echo -n "$(f_time_slug "$t")"
+}
+
+f_dir_slug() {
+	local t="$1"
+	echo -n "$(f_time "$t" "%Y/%m")"
+}
+
+f_dir() {
+	local t="$1"
+	echo -n "$L_PATH_CHRONO/$(f_dir_slug "$t")"
+}
+
+f_path() {
+	local t="$1"
+	echo -n "$L_PATH_CHRONO/$(f_time_slug "$t").q"
+}
+
+f_create_tracker() {
+	local t="$1"
+	local p=$(f_path "$t")
+	if [ ! -f "$p" ]; then
+		local slug=$(f_time_slug "$t")
+		msg "creating $slug"
+		mkdir -p "$(f_dir "$t")" &> /dev/null
+		if [ $? != 0 ]; then
+			error "failed to create path to $slug"
+			return 1
+		fi
+		cp -nT "$L_PATH_TEMPLATE" "$p"
+		if [ $? != 0 ]; then
+			error "failed to copy template to $slug"
+			return 1
+		fi
+		local iso_time=$(f_time "$t" "%Y-%m-%d")
+		sed -i -e "s/__QUANTA_TEMPLATE_DATE__/${iso_time}Z/" "$p"
+		if [ $? != 0 ]; then
+			error "failed to sed $slug"
+			return 1
+		fi
+	fi
+	return 0
+}
+
+f_check_create() {
+	local t="$1"
+	local p=$(f_path "$t")
+	if [ ! -f "$p" ]; then
+		local slug=$(f_time_slug "$t")
+		msg "$slug does not exist"
+		local prompt=
+		while true; do
+			read -p "do you want to create it? [Y/n] " prompt
+			case $prompt in
+			[Yy]*) ;&
+			"")
+				if ! f_create_tracker "$t"; then
+					return 1
+				fi
+				break
+			;;
+			*) return 1;;
+			esac
+		done
+	fi
+	return 0
+}
+
+c_open() {
+	local t="$1"
+	if ! f_is_time_valid "$t"; then
+		error "invalid time: $t"
+		return 1
+	fi
+	if ! f_check_create "$t"; then
+		return 1
+	fi
+	local p=$(f_path "$t")
+	local slug=$(f_time_slug "$t")
+	msg "opening $slug"
+	local line=$(wc -l "$p" | cut -d " " -f 1 2> /dev/null)
+	sbt2 "$p:$line"
+	return 0
+}
+
+c_set() {
+	local t="$1"
+	if ! f_is_time_valid "$t"; then
+		error "invalid time: "$t""
+		return 1
+	fi
+	if ! f_check_create "$t"; then
+		return 1
+	fi
+	local slug=$(f_time_slug "$t")
+	if [ "$slug" == "$(f_time_active)" ]; then
+		msg "$slug is already active"
+		return 1
+	fi
+	msg "making $slug active"
+	echo "$slug" > "$L_PATH_ACTIVE"
+	return 0
+}
+
+c_grep() {
+	local plain="$1"
+	local pattern="$2"
+	shift; shift
+	local path_pattern=
+	while [ $# != 0 ]; do
+		path_pattern=$path_pattern"$L_PATH_CHRONO/$1* "
+		shift
+	done
+	if [ -z "$path_pattern" ]; then
+		path_pattern="$L_PATH_CHRONO/20*"
+	fi
+
+	local opts="-r"
+	if [ "$plain" == "f" ]; then
+		opts=$opts" -F"
+	fi
+	local output="$(grep --color=always $opts "$pattern" $path_pattern)"
+	if [ $? != 0 ]; then
+		error "grep failed"
+		return 1
+	fi
+	echo -n "$output" \
+		| sort -s -t: -k1,1 \
+		| sed -e "s|$L_PATH_CHRONO/||" -e "s|.q||"
+	return 0
+}
+
+c_grep_last() {
+	local plain="$1"
+	local pattern="$2"
+	local num_months=$3
+	local path_pattern=
+	local t="$(f_time_slug "$(f_time_now)")"
+	while [ $num_months -ge 0 ]; do
+		path_pattern="$path_pattern $(f_dir_slug "$t $num_months month ago")"
+		(( --num_months ))
+	done
+	if [ -z "$path_pattern" ]; then
+		path_pattern="$(f_dir_slug "$t")"
+	fi
+	c_grep "$plain" "$pattern" $path_pattern
+}
+
+c_info() {
+	msg_local "active: $(f_time_active)"
+}
+
+c_help() {
+	msg_local "usage: $_q_script_name command [arguments]"
+	msg_local "commands:
+  open [timespec]
+    open a tracker
+
+  set <timespec>
+    set active and open a tracker
+
+  grep[f] <patterns>
+  grepm[f] <patterns>
+  grepn[f] <num_months> <patterns>
+    search tracker entries
+    all arguments are space-concatenated to the pattern
+    m: search within the last 2 months
+    n: search within the last <num_months> months
+    f: no regex
+
+  info
+    show tracker info
+
+  help"
+}
+
+main() {
+	local cmd="$1"
+	if [ -z "$cmd" ]; then
+		cmd="info"
+	fi
+
+	shift
+	case "$cmd" in
+	"help")
+		c_help
+	;;
+
+	"info")
+		c_info
+	;;
+
+	"open")
+		local t="$@"
+		if [ -z "$t" ]; then
+			t="$(f_time_active)"
+		fi
+		c_open "$t" || return $?
+	;;
+
+	"set")
+		local t="$@"
+		if [ -z "$t" ]; then
+			error "expected timespec argument"
+			return 1
+		fi
+		c_set "$t" || return $?
+		c_open "$t" || return $?
+	;;
+
+	"grep"|"grepf")
+		local pattern="$@"
+		if [ -z "$pattern" ]; then
+			error "expected pattern argument"
+			return 1
+		fi
+		c_grep "${cmd: -1}" "$pattern" "" || return $?
+	;;
+
+	"grepn"|"grepnf")
+		local num_months="$1"
+		if [ -z "$num_months" ]; then
+			error "expected num_months argument"
+			return 1
+		fi
+		shift
+		local pattern="$@"
+		if [ -z "$pattern" ]; then
+			error "expected pattern argument"
+			return 1
+		fi
+		c_grep_last "${cmd: -1}" "$pattern" "$num_months" || return $?
+	;;
+
+	"grepm"|"grepmf")
+		local pattern="$@"
+		if [ -z "$pattern" ]; then
+			error "expected pattern argument"
+			return 1
+		fi
+		c_grep_last "${cmd: -1}" "$pattern" 2 || return $?
+	;;
+
+	*)
+		error "expected command, got '$cmd'"
+		return 1
+	;;
+	esac
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

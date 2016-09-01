@@ -1,0 +1,15 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+main() {
+	msg "updating binaries"
+	cp -pP "$QUANTA_CORE/../../quanta/build/bin/tool.elf" "$QUANTA_CORE_SCRIPT/qv-tool" || return $?
+	chmod 764 "$QUANTA_CORE_SCRIPT/qv-tool" || return $?
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

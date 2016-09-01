@@ -1,0 +1,207 @@
+#!/bin/bash
+
+if [ -z "$QUANTA_CORE" ]; then
+	echo "error: core not bootstrapped" 1>&2
+	return 99
+fi
+
+if [ -z "$QUANTA_VESSEL_ROOT" ]; then
+	declare -ax QUANTA_VESSEL_ROOT=()
+	declare -ax QUANTA_VESSEL_NAME=()
+fi
+
+if [ -z "$QUANTA_ACTIVE" ]; then
+	export QUANTA_ACTIVE=
+fi
+if [ -z "$QUANTA_ROOT" ]; then
+	export QUANTA_ROOT=
+fi
+if [ -z "$QUANTA_CRYPT" ]; then
+	export QUANTA_CRYPT=
+fi
+
+_quanta_script_init_real() {
+	_q_script_name="$1"
+	if [ -z "$_q_script_name" ]; then
+		_q_script_name="${FUNCNAME[2]}"
+		if [[ $_q_script_name == main ]]; then
+			_q_script_name=
+		fi
+	fi
+	if [ -z "$_q_script_name" ]; then
+		_q_script_name="$(basename "$(readlink -f "${BASH_SOURCE[2]}")")"
+	fi
+	_q_script_root="$(dirname "$(readlink -f "${BASH_SOURCE[2]}")")"
+	_q_script_logging_enabled=true
+	# echo "!! script init   $_q_script_name   ${BASH_SOURCE[2]}" 1>&2
+
+	source "$_q_script_root/shell" || _quanta_script_exit $?
+	return $?
+}
+
+_quanta_script_init() {
+	_quanta_script_init_real "$@"
+	return $?
+}
+
+_quanta_script_exit() {
+	unset _q_script_name
+	unset _q_script_logging_enabled
+	unset _q_script_root
+	unset is_crypt_mounted
+	unset is_vessel_mounted
+	unset set_logging_enabled
+	unset msg_local
+	unset warning_local
+	unset error_local
+	unset put_script_log
+	unset msg
+	unset warning
+	unset error
+	return $1
+}
+
+_quanta_run_script() {
+	local func=$1
+	shift
+
+	_quanta_script_init_real || return $?
+	$func "$@"
+	_quanta_script_exit $? || return $?
+	return 0
+}
+
+_quanta_set_bucket_vars() {
+	local bucket="$1"
+	local root="$2"
+	local affix_bucket=$3
+	local prefix="QUANTA_${bucket^^}"
+	if [[ $affix_bucket == true ]]; then
+		root="$root/$bucket"
+	fi
+
+	export "${prefix}"="$root"
+	export "${prefix}_SCRIPT"="$root/script"
+	export "${prefix}_LOG"="$root/log"
+	export "${prefix}_DATA"="$root/data"
+	export "${prefix}_SYS"="$root/sys"
+	export "${prefix}_BIN"="$root/bin"
+	export "${prefix}_SUBLIME"="$root/sublime"
+}
+
+_quanta_load_config() {
+	local name="$1"
+	local path="$2"
+	shift; shift
+
+	if [ -z "$name" ]; then
+		error_local "expected name"
+		return 1
+	fi
+	if [ -z "$path" ]; then
+		error_local "expected path"
+		return 2
+	fi
+
+	_quanta_set_bucket_vars "$name" "$path" false
+	source "$path/config" "$@"
+
+	return 0
+}
+
+qv-load-config() {
+	_quanta_run_script _quanta_load_config "$@" || return $?
+}
+
+_quanta_find_vessel() {
+	local name="$1"
+	local index=0
+	for l_name in "${QUANTA_VESSEL_NAME[@]}"; do
+		if [[ $l_name == $name ]]; then
+			echo $index
+			return 0
+		fi
+		(( ++index ))
+	done
+	return 1
+}
+
+_quanta_add_vessel() {
+	local name="$1"
+	local root="$2"
+
+	if [ -z "$name" ]; then
+		error_local "expected name"
+		return 1
+	fi
+	if [ -z "$root" ]; then
+		error_local "expected root path"
+		return 2
+	fi
+
+	local index=$(_quanta_find_vessel "$name")
+	if [ ! -z $index ]; then
+		error_local "vessel already exists: $name = ${QUANTA_VESSEL_ROOT[$index]}"
+		return 3
+	fi
+
+	QUANTA_VESSEL_NAME+=("$name")
+	QUANTA_VESSEL_ROOT+=("$root")
+	return 0
+}
+
+qv-add-vessel() {
+	_quanta_run_script _quanta_add_vessel "$@" || return $?
+}
+
+_quanta_switch_env() {
+	local name="$1"
+	if [ -z "$name" ]; then
+		if [ -z "$QUANTA_ACTIVE" ]; then
+			msg_local "active vessel: <none>"
+		else
+			msg_local "active vessel: #$QUANTA_ACTIVE_INDEX $QUANTA_ACTIVE"
+		fi
+		return 0
+	fi
+
+	if [[ "$QUANTA_ACTIVE" == "$name" ]]; then
+		msg_local "vessel is already active: $name = $QUANTA_ROOT"
+		return 0
+	fi
+
+	local index=$(_quanta_find_vessel "$name")
+	if [ -z $index ]; then
+		error_local "vessel not found: $name"
+		return 1
+	fi
+
+	msg_local "switching to vessel: $name"
+	QUANTA_ACTIVE="$name"
+	QUANTA_ACTIVE_INDEX=$index
+	QUANTA_ROOT="${QUANTA_VESSEL_ROOT[$index]}"
+	QUANTA_CRYPT="$QUANTA_ROOT/crypt"
+
+	_quanta_set_bucket_vars "local" "$QUANTA_ROOT" true
+	_quanta_set_bucket_vars "vessel" "$QUANTA_ROOT" true
+	source "$QUANTA_LOCAL/vessel-config" || return $?
+
+	return 0
+}
+
+qv-env() {
+	_quanta_run_script _quanta_switch_env "$@" || return $?
+}
+
+qv-env-list() {
+	echo "vessels:"
+	for index in "${!QUANTA_VESSEL_NAME[@]}"; do
+		echo -n " "
+		if [[ $index == $QUANTA_ACTIVE_INDEX ]]; then
+			echo -n "* "
+		else
+			echo -n "  "
+		fi
+		echo "#$index ${QUANTA_VESSEL_NAME[$index]} = ${QUANTA_VESSEL_ROOT[$index]}"
+	done
+}

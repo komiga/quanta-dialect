@@ -1,0 +1,51 @@
+[
+	// Quanta
+	{ "keys": ["f1"], "command": "quanta_new_tracker_entry",
+		"args": {
+			"e_content": "ETODO",
+			"content_selected": true,
+			"at_end": true
+		},
+		"context": [{ "key": "selector", "operator": "equal", "operand": "source.quanta" }]
+	},
+	{ "keys": ["shift+f1"], "command": "quanta_new_tracker_entry",
+		"args": {
+			"e_content": "ETODO",
+			"content_selected": true
+		},
+		"context": [{ "key": "selector", "operator": "equal", "operand": "source.quanta" }]
+	},
+
+	{ "keys": ["alt+f1"], "command": "quanta_new_tracker_entry",
+		"args": {
+			"e_entry_tags": ":ool",
+			"e_range_end": "XXX",
+			"e_content": "ETODO",
+			"content_selected": true,
+			"at_end": true
+		},
+		"context": [{ "key": "selector", "operator": "equal", "operand": "source.quanta" }]
+	},
+	{ "keys": ["alt+shift+f1"], "command": "quanta_new_tracker_entry",
+		"args": {
+			"e_entry_tags": ":ool",
+			"e_range_end": "XXX",
+			"e_content": "ETODO",
+			"content_selected": true
+		},
+		"context": [{ "key": "selector", "operator": "equal", "operand": "source.quanta" }]
+	},
+
+	{ "keys": ["alt+f2"], "command": "quanta_insert_time",
+		"context": [{ "key": "selector", "operator": "equal", "operand": "source.quanta" }]
+	},
+	{ "keys": ["alt+shift+f2"], "command": "quanta_new_tracker_entry",
+		"args": {
+			"e_content": null,
+			"e_continue_id": "${1:ETODO}",
+			"content_selected": true,
+			"at_end": true
+		},
+		"context": [{ "key": "selector", "operator": "equal", "operand": "source.quanta" }]
+	}
+]

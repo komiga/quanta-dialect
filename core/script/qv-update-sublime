@@ -1,0 +1,21 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+
+main() {
+	msg "updating Sublime completions"
+	# TODO: update only existing actions.q
+	lua5.2 \
+		"$QUANTA_CORE_SCRIPT/make-st-completions.lua" \
+		"$QUANTA_CORE_SUBLIME/actions.sublime-completions" \
+		"$QUANTA_CORE_SUBLIME/actions.q" \
+		"$QUANTA_USER_SUBLIME/actions.q" #\
+		# "$QUANTA_VESSEL_SUBLIME/actions.q"
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}

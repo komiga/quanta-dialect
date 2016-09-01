@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "Vessel",
+			"path": "../",
+			"folder_exclude_patterns": [
+				"lost+found",
+				"bin",
+				"sys"
+			]
+		}
+	],
+	"settings": {
+		"tab_size": 4
+	}
+}

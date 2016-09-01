@@ -1,0 +1,10 @@
+[
+	{
+	    "caption": "Quanta: New Tracker Entry",
+	    "command": "quanta_new_tracker_entry"
+	},
+	{
+	    "caption": "Quanta: Insert Time",
+	    "command": "quanta_insert_time"
+	}
+]
