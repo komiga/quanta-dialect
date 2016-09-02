@@ -72,14 +72,14 @@ main() {
 		shift
 	done
 
-	local input="-"
-	if [[ ! -z "$@" ]]; then
-		input="$@"
+	local input="$@"
+	if [ -z "$input" ]; then
+		input="-"
 	fi
 	if [[ "$input" == "-" ]]; then
 		input=`cat`
 	fi
-	if [[ -z "$input" ]]; then
+	if [ -z "$input" ]; then
 		error "failed to $mode: no input"
 		return 3
 	fi
