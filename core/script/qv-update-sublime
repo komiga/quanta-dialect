@@ -4,15 +4,27 @@ source "$(dirname "$(readlink -f "$0")")/environment"
 
 {
 
-main() {
-	msg "updating Sublime completions"
-	# TODO: update only existing actions.q
+f_make() {
+	local group="$1"
+	if [ ! -f "$group/actions.q" ]; then
+		return 1
+	fi
 	lua5.2 \
 		"$QUANTA_CORE_SCRIPT/make-st-completions.lua" \
-		"$QUANTA_CORE_SUBLIME/actions.sublime-completions" \
-		"$QUANTA_CORE_SUBLIME/actions.q" \
-		"$QUANTA_USER_SUBLIME/actions.q" #\
-		# "$QUANTA_VESSEL_SUBLIME/actions.q"
+		"$group/actions.sublime-completions" \
+		"$group/actions.q" \
+	|| return $?
+	return 0
+}
+
+main() {
+	msg "updating Sublime completions"
+	f_make "$QUANTA_CORE_SUBLIME"
+	f_make "$QUANTA_USER_SUBLIME"
+	f_make "$QUANTA_VESSEL_SUBLIME"
+	if [[ $? == 0 && is_vessel_mounted ]]; then
+		"$QUANTA_CORE_SCRIPT/qv-sync" || return $?
+	fi
 	return 0
 }
 
