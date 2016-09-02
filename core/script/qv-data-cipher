@@ -55,6 +55,11 @@ main() {
 			fi
 		;;
 
+		"--")
+			shift
+			break
+		;;
+
 		*)
 			if [[ "${opt:0:2}" == "--" ]]; then
 				error "unrecognized option: $opt"
