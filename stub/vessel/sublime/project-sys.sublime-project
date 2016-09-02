@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "Vessel - System",
+			"path": "../sys"
+		}
+	],
+	"settings": {
+		"tab_size": 4
+	}
+}
