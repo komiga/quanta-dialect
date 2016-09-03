@@ -1,9 +1,9 @@
 
-package.path = package.path .. [[;./?/module.lua]]
-
 local U = require "togo.utility"
 local Vessel = require "Quanta.Vessel"
 local Director = require "Quanta.Director"
+
+Vessel.export("?/module.lua")
 
 local Dialect = require "Dialect"
 
