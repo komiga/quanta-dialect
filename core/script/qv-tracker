@@ -184,8 +184,11 @@ c_grep_last() {
 	local num_months=$3
 	local path_pattern=
 	local t="$(f_time_slug "$(f_time_now)")"
+	local day=
 	while [ $num_months -ge 0 ]; do
-		path_pattern="$path_pattern $(f_dir_slug "$t $num_months month ago")"
+		path_pattern="$(f_dir_slug "$t") $path_pattern"
+		day="$(f_time "$t" "%d")"
+		t="$(f_time_slug "$t - $day days")"
 		(( --num_months ))
 	done
 	if [ -z "$path_pattern" ]; then
