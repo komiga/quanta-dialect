@@ -117,7 +117,7 @@ local function normalize_unit_impl(unit, outer)
 			common_unit = munit_milligram
 		end
 		local inner_sum = Measurement(0, common_unit)
-		local specified_mass = 0
+		local specified_atomic_mass = 0
 		local total_atomic_mass = 0
 		for index, item in ipairs(unit.items) do
 			U.assert(item.thing and U.is_instance(item.thing.data, ChemicalElement))
@@ -130,12 +130,12 @@ local function normalize_unit_impl(unit, outer)
 				item._num_atoms = m.of
 				item._factor = m.of * element.mass
 				if m.qindex == Measurement.QuantityIndex.mass then
-					if specified_mass == 0 then
+					if specified_atomic_mass == 0 then
 						common_unit = m:unit()
 						inner_sum:convert(common_unit)
 					end
 					inner_sum:add(m)
-					specified_mass = specified_mass + item._factor
+					specified_atomic_mass = specified_atomic_mass + item._factor
 				end
 			else
 				item._num_atoms = 1
@@ -143,9 +143,9 @@ local function normalize_unit_impl(unit, outer)
 			end
 			total_atomic_mass = total_atomic_mass + item._factor
 		end
-		if specified_mass ~= 0 then
+		if specified_atomic_mass ~= 0 then
 			inner_sum.of = 0
-			inner_sum.value = inner_sum.value / (specified_mass / total_atomic_mass)
+			inner_sum.value = inner_sum.value / (specified_atomic_mass / total_atomic_mass)
 			unit.measurements = {inner_sum}
 			outer = M.normalize_unit_measurements(unit, outer)
 		end
