@@ -116,6 +116,15 @@ local function normalize_unit_impl(unit, outer)
 		if not common_unit then
 			common_unit = munit_milligram
 		end
+		local atomic_multiplier = 1
+		local m = unit.measurements[1]
+		if m and m.of > 0 then
+			atomic_multiplier = m.of
+			if m.value == 0 then
+				unit.measurements = {}
+			end
+		end
+
 		local inner_sum = Measurement(0, common_unit)
 		local specified_atomic_mass = 0
 		local total_atomic_mass = 0
@@ -127,7 +136,7 @@ local function normalize_unit_impl(unit, outer)
 				if m.of == 0 then
 					m.of = 1
 				end
-				item._num_atoms = m.of
+				item._num_atoms = m.of * atomic_multiplier
 				item._factor = m.of * element.mass
 				if m.qindex == Measurement.QuantityIndex.mass then
 					if specified_atomic_mass == 0 then
@@ -138,7 +147,7 @@ local function normalize_unit_impl(unit, outer)
 					specified_atomic_mass = specified_atomic_mass + item._factor
 				end
 			else
-				item._num_atoms = 1
+				item._num_atoms = atomic_multiplier
 				item._factor = element.mass
 			end
 			total_atomic_mass = total_atomic_mass + item._factor
