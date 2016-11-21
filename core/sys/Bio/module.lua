@@ -15,6 +15,7 @@ M.resolve_func = function()
 end
 
 local quantity_mass = Measurement.Quantity.mass
+local quantity_dimensionless = Measurement.Quantity.dimensionless
 local munit_dimensionless = Measurement.get_unit("")
 local munit_gram = Measurement.get_unit("g")
 local munit_milligram = Measurement.get_unit("mg")
@@ -48,7 +49,7 @@ function BioDebugModifier:compare_equal(other)
 end
 
 function M.normalize_measurement(m)
-	if m.qindex == Measurement.QuantityIndex.dimensionless then
+	if m.qindex == quantity_dimensionless.index then
 		m.of = m.of + m.value
 		m.value = 0
 	elseif m.qindex ~= quantity_mass.index then
@@ -189,9 +190,26 @@ local function normalize_unit_impl(unit, outer)
 		local specified = {}
 		local unspecified = {}
 		for _, item in ipairs(unit.items) do
-			if #item.measurements > 0 then
+			local factor_known = false
+			local m = item.measurements[1]
+			if item.id_hash == chemical_id_hash then
+				if m and m.value ~= 0 and m.qindex ~= quantity_dimensionless.index then
+					factor_known = true
+				else
+					for _, item_element in ipairs(item.items) do
+						m = item_element.measurements[1]
+						if m and m.value ~= 0 and m.qindex ~= quantity_dimensionless.index then
+							factor_known = true
+							break
+						end
+					end
+				end
+			elseif #item.measurements > 0 then
+				factor_known = true
+			end
+			if factor_known then
 				normalize_unit_impl(item, outer)
-				local m = item.measurements[1]
+				m = item.measurements[1]
 				if m.qindex == inner_sum.qindex then
 					inner_sum:add(m)
 				end
