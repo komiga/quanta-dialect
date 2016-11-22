@@ -121,6 +121,7 @@ local function normalize_unit_impl(unit, outer)
 		local m = unit.measurements[1]
 		if m and m.of > 0 then
 			atomic_multiplier = m.of
+			m.of = 0
 			if m.value == 0 then
 				unit.measurements = {}
 			end
@@ -155,7 +156,7 @@ local function normalize_unit_impl(unit, outer)
 			total_atomic_mass = total_atomic_mass + item._factor
 		end
 		if specified_atomic_mass ~= 0 then
-			inner_sum.of = atomic_multiplier
+			inner_sum.of = 0
 			inner_sum.value = inner_sum.value / (specified_atomic_mass / total_atomic_mass)
 			unit.measurements = {inner_sum}
 			outer = M.normalize_unit_measurements(unit, outer)
