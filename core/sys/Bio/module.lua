@@ -137,7 +137,8 @@ local function normalize_unit_impl(unit, outer)
 				if m.of == 0 then
 					m.of = 1
 				end
-				item._num_atoms = m.of * atomic_multiplier
+				m.of = m.of * atomic_multiplier
+				item._num_atoms = m.of
 				item._factor = m.of * element.mass
 				if m.qindex == Measurement.QuantityIndex.mass then
 					if specified_atomic_mass == 0 then
@@ -149,12 +150,12 @@ local function normalize_unit_impl(unit, outer)
 				end
 			else
 				item._num_atoms = atomic_multiplier
-				item._factor = element.mass
+				item._factor = atomic_multiplier * element.mass
 			end
 			total_atomic_mass = total_atomic_mass + item._factor
 		end
 		if specified_atomic_mass ~= 0 then
-			inner_sum.of = 0
+			inner_sum.of = atomic_multiplier
 			inner_sum.value = inner_sum.value / (specified_atomic_mass / total_atomic_mass)
 			unit.measurements = {inner_sum}
 			outer = M.normalize_unit_measurements(unit, outer)
