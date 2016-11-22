@@ -20,7 +20,7 @@ local munit_dimensionless = Measurement.get_unit("")
 local munit_gram = Measurement.get_unit("g")
 local munit_milligram = Measurement.get_unit("mg")
 local munit_ratio = Measurement.get_unit("ratio")
-local chemical_id_hash = O.hash_name("chemical")
+M.chemical_id_hash = O.hash_name("chemical")
 
 local BioDebugModifier = U.class(BioDebugModifier)
 
@@ -113,7 +113,7 @@ local function normalize_unit_impl(unit, outer)
 	local common_unit = outer and outer:unit()
 	-- U.log("%s :: %s", unit.id, common_unit and common_unit.name or "none")
 
-	if unit.id_hash == chemical_id_hash and unit.thing then
+	if unit.id_hash == M.chemical_id_hash and unit.thing then
 		if not common_unit then
 			common_unit = munit_milligram
 		end
@@ -192,8 +192,8 @@ local function normalize_unit_impl(unit, outer)
 		local unspecified = {}
 		for _, item in ipairs(unit.items) do
 			local factor_known = false
-			local m = item.measurements[1]
-			if item.id_hash == chemical_id_hash then
+			if item.id_hash == M.chemical_id_hash then
+				local m = item.measurements[1]
 				if m and m.value ~= 0 and m.qindex ~= quantity_dimensionless.index then
 					factor_known = true
 				else
@@ -210,7 +210,7 @@ local function normalize_unit_impl(unit, outer)
 			end
 			if factor_known then
 				normalize_unit_impl(item, outer)
-				m = item.measurements[1]
+				local m = item.measurements[1]
 				if m.qindex == inner_sum.qindex then
 					inner_sum:add(m)
 				end
