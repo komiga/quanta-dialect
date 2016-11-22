@@ -178,7 +178,16 @@ function(self, parent, options, params)
 	local function resolve_and_mark(resolver, unit)
 		local result = resolver:do_tree(unit)
 		for _, p in ipairs(result.not_found) do
-			table.insert(p.unit.modifiers, not_found_modifier)
+			local already_marked = false
+			for _, m in ipairs(p.unit.modifiers) do
+				if U.is_instance(m.data, NotFoundModifier) then
+					already_marked = true
+					break
+				end
+			end
+			if not already_marked then
+				table.insert(p.unit.modifiers, not_found_modifier)
+			end
 		end
 		return result
 	end
