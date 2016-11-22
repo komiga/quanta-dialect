@@ -29,7 +29,7 @@ function M:__init(item, amount)
 	end
 
 	if not self.amount then
-		amount = Measurement(0, munit_gram)
+		self.amount = Measurement(0, munit_gram)
 	end
 end
 
