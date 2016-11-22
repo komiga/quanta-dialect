@@ -220,6 +220,8 @@ local function normalize_unit_impl(unit, outer)
 				table.insert(unspecified, item)
 			end
 		end
+
+		inner_sum.of = 0
 		if not outer then
 			if #unspecified == 0 then
 				unit.measurements = {inner_sum:make_copy()}
