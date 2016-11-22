@@ -86,17 +86,17 @@ function M._normalize_amount(unit, outer)
 	local amount = unit.measurements[1]
 	if amount then
 		amount = amount:make_copy()
-		if outer then
-			if outer.value > 0 then
-				amount.value = unit._factor * (outer.value * 10 ^ (outer.magnitude - amount.magnitude))
-			else
-				amount.value = amount.value * outer.of
-			end
-		end
 	elseif outer then
 		amount = outer:make_copy()
 	else
 		amount = Measurement(0, munit_dimensionless, 1)
+	end
+	if outer then
+		if outer.value > 0 then
+			amount.value = unit._factor * (outer.value * 10 ^ (outer.magnitude - amount.magnitude))
+		elseif outer.of > 0 then
+			amount.value = amount.value * outer.of
+		end
 	end
 	Bio.normalize_measurement(amount)
 	--[[if amount.value ~= 0 and amount.of == 1 then
