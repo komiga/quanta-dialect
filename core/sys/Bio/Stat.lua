@@ -89,7 +89,7 @@ function M._normalize_amount(unit, outer)
 		if outer then
 			if outer.value > 0 then
 				amount.value = unit._factor * (outer.value * 10 ^ (outer.magnitude - amount.magnitude))
-			elseif unit.id_hash ~= Bio.chemical_id_hash then
+			else
 				amount.value = amount.value * outer.of
 			end
 		end
