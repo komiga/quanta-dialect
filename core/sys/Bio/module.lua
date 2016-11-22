@@ -236,7 +236,11 @@ local function normalize_unit_impl(unit, outer)
 			if dist_amount > 0 then
 				local dist = Measurement(dist_amount, common_unit, 0, 0, #unspecified == 1)
 				for _, item in ipairs(unspecified) do
+					local m = item.measurements[1]
 					item.measurements = {dist:make_copy()}
+					if m and item.id_hash == M.chemical_id_hash then
+						item.measurements[1].of = m.of
+					end
 					normalize_unit_impl(item, outer)
 				end
 			end
