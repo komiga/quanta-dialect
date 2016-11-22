@@ -10,6 +10,7 @@ local Bio = require "Bio"
 
 local M = U.module(...)
 
+local munit_dimensionless = Measurement.get_unit("")
 local munit_gram = Measurement.get_unit("g")
 
 U.class(M)
@@ -92,8 +93,10 @@ function M._normalize_amount(unit, outer)
 				amount.value = amount.value * outer.of
 			end
 		end
-	else
+	elseif outer then
 		amount = outer:make_copy()
+	else
+		amount = Measurement(0, munit_dimensionless, 1)
 	end
 	Bio.normalize_measurement(amount)
 	--[[if amount.value ~= 0 and amount.of == 1 then
