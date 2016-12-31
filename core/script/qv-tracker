@@ -222,7 +222,8 @@ c_help() {
   info
     show tracker info
 
-  help"
+  help
+    show this message"
 }
 
 main() {
