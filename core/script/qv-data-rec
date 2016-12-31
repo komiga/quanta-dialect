@@ -1,0 +1,310 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+shopt -s extglob
+
+{
+
+L_FMT_SECS="@%s"
+L_FMT_DATE="%Y-%m-%d"
+L_FMT_CLOCK="%H:%M:%S"
+L_FMT_NAME="%Y-%m-%d_%H-%M-%S"
+
+read -r -d '' L_ENTRY_TEMPLATE << EOF
+Entry:ool{range = __R_S__ - __R_E__, continue_id = null, actions = {
+	Record{log.audio{"ETODO", url = local"__PATH__"}}
+}};
+EOF
+
+f_time() {
+	local t="$1"
+	local f="$2"
+	echo -n "$(date -u -d "$t" "+$f")"
+}
+
+f_parse_source() {
+	# recordYYYYmmddHHMMSS.3gpp
+	local n=$(basename "$1")
+	n="${n%%.*}"
+	n="${n:$((${#n} - 14))}"
+	local y="${n:0:4}"
+	local m="${n:4:2}"
+	local d="${n:6:2}"
+	local hr="${n:8:2}"
+	local mn="${n:10:2}"
+	local sc="${n:12:2}"
+	local iso="$y-$m-${d}T$hr:$mn:$sc$(date +%z)"
+	echo -n $(f_time "$iso" "$L_FMT_SECS")
+}
+
+f_modtime() {
+	local t=$(TZ=utc stat -c "@%Y" "$1")
+	echo -n $(f_time "$t" "$L_FMT_SECS")
+}
+
+c_pull() {
+	local root="$1"
+	local android_path="$2"
+	local dont_try_clean="$3"
+
+	pushd "$root" &> /dev/null
+	local num=$(adb shell ls "$android_path" | wc -l)
+	if (( $num > 0 )); then
+		msg_local "pulling..."
+		if ! adb pull -a "$android_path"; then
+			error_local "failed to pull $android_path"
+			return 1
+		fi
+		if [ -z "$dont_try_clean" ] || [ "$dont_try_clean" == 0 ] || [ "$dont_try_clean" == false ]; then
+			c_clean "$root" "$android_path"
+		fi
+	else
+		msg_local "no files to pull"
+	fi
+	popd &> /dev/null
+	return 0
+}
+
+c_clean() {
+	local root="$1"
+	local android_path="$2"
+	local force=$3
+
+	if [[ $force != true ]]; then
+		local prompt=
+		while true; do
+			read -p "remove all files from $android_path? [Y/n] " prompt
+			case $prompt in
+			[Yy]*) ;&
+			"")
+				break
+			;;
+			*) return 1;;
+			esac
+		done
+	fi
+
+	msg_local "clearing $android_path"
+	if ! adb shell rm "$android_path/*"; then
+		return 1
+	fi
+	return 0
+}
+
+f_make_entry() {
+	local stime="$1"
+	local etime="$2"
+	local path="$3"
+
+	local entry="${L_ENTRY_TEMPLATE/__R_S__/$(f_time "$stime" "$L_FMT_CLOCK")}"
+	entry="${entry/__R_E__/$(f_time "$etime" "$L_FMT_CLOCK")}"
+	entry="${entry/__PATH__/$path}"
+
+	echo
+	echo -n "$entry"
+}
+
+f_fixup_do_file() {
+	local entries_file="$1"
+	local path="$2"
+	local stime=$(f_parse_source "$path")
+	local etime=$(f_modtime "$path")
+	local path_out="$(f_time "$stime" "$L_FMT_NAME").${path#*.}"
+
+	echo "$(f_make_entry $stime $etime "$path_out")" >> "$entries_file"
+	path_out="$(basename "$path_out")"
+	mv -inuT "$path" "$path_out"
+
+	if [ -f "$path" ]; then
+		local ssize=$(stat -c "%s" "$path")
+		local dsize=$(stat -c "%s" "$path_out")
+		local comp="=="
+		if (( $ssize < $dsize )); then
+			comp="<"
+		elif (( $ssize > $dsize )); then
+			comp=">"
+		fi
+		warning_local "output path already exists; $ssize $comp $dsize (in vs out): $path_out"
+	else
+		msg_local "mv $path $path_out"
+	fi
+	return 0
+}
+
+c_fixup() {
+	local root="$1"
+	local subpath="$2"
+	local pattern="$3"
+	local entries_file="$root/entries.q"
+
+	cp -f --preserve=all "$entries_file" "$root/entries_prev.q"
+	echo -n > "$entries_file"
+	pushd "$root" &> /dev/null
+	local num=0
+	find "$subpath/" -type f -name "$pattern" -print0 | sort -z | \
+	while IFS= read -r -d $'\0' f; do
+		f_fixup_do_file "$entries_file" "$f" || return $?
+		(( num++ ))
+	done
+	if (( num = 0 )); then
+		msg_local "no files matched the pattern: $subpath/$pattern"
+	fi
+	popd &> /dev/null
+	return 0
+}
+
+f_parse_storage() {
+	# prefixYYYY-mm-dd_HH-MM-SS.3gpp
+	local n=$(basename "$1")
+	n="${n%%.*}"
+	n="${n:$((${#n} - 19))}"
+	local y="${n:0:4}"
+	local m="${n:5:2}"
+	local d="${n:8:2}"
+	local hr="${n:11:2}"
+	local mn="${n:14:2}"
+	local sc="${n:17:2}"
+	local iso="$y-$m-${d}T$hr:$mn:$sc"
+	echo -n $(f_time "$iso" "$L_FMT_SECS")
+}
+
+f_print_do_file() {
+	local entries_file="$1"
+	local path="$2"
+	local stime=$(f_parse_storage "$path")
+	local etime=$(f_modtime "$path")
+
+	path="$(basename "$path")"
+	echo "$(f_make_entry $stime $etime "$path")" >> "$entries_file"
+	msg_local "$(f_time "$stime" "$L_FMT_DATE")T $(f_time "$stime" "$L_FMT_CLOCK") - $(f_time "$etime" "$L_FMT_CLOCK")  $path"
+	return 0
+}
+
+c_print() {
+	local root="$1"
+	local pattern="$2"
+	local entries_file="$root/entries.q"
+
+	if [ -f "$entries_file" ]; then
+		cp -f --preserve=all "$entries_file" "$root/entries_prev.q"
+	fi
+	echo -n > "$entries_file"
+	msg_local "recordings:"
+	find "$root" -type f -name "*.3gpp" -print0 | sort -z | \
+	while IFS= read -r -d $'\0' f; do
+		f_print_do_file "$entries_file" "$f" || return $?
+	done
+	return 0
+}
+
+c_help() {
+	msg_local "usage: $_q_script_name command [arguments]"
+	msg_local "commands:
+  pull <storage_root> [android_path=/sdcard/Recording] [dont_try_clean]
+    pull recordings from attached Android device
+
+    dont_try_clean: don't prompt to clean after pulling
+
+  clean <storage_root> [android_path=/sdcard/Recording]
+    remove recordings (whole directory) on attached Android device
+
+  fixup <storage_root> [subpath=Recording] [pattern=*.3gpp]
+    fixup recordings from the standard Android recording app
+
+    moves and renames files from <root>/[subpath]/[pattern] to <root>/ with
+    the following pattern (in UTC):
+
+      YYYY-mm-dd_HH-MM-SS.ext
+
+    write tracker entries for them to <root>/entries.q
+    entries.q is backed up to entries_prev.q before writing
+    entries are in UTC
+
+  print <storage_root> [pattern=*.3gpp]
+    print entries for recordings
+
+  help
+    show this message"
+}
+
+main() {
+	local cmd="$1"
+	if [ -z "$cmd" ]; then
+		cmd="help"
+	fi
+
+	shift
+	case "$cmd" in
+	"help")
+		c_help
+	;;
+
+	"pull")
+		local root="$1"
+		if [ ! -d "$root" ]; then
+			error "root path is not a directory: $root"
+			return 1
+		fi
+		local android_path="$2"
+		if [ -z "$android_path" ]; then
+			android_path="/sdcard/Recording"
+		fi
+		local dont_try_clean="$3"
+		c_pull "$root" "$android_path" "$dont_try_clean" || return $?
+	;;
+
+	"clean")
+		local root="$1"
+		if [ ! -d "$root" ]; then
+			error "root path is not a directory: $root"
+			return 1
+		fi
+		local android_path="$2"
+		if [ -z "$android_path" ]; then
+			android_path="/sdcard/Recording"
+		fi
+		c_clean "$root" "$android_path" || return $?
+	;;
+
+	"fixup")
+		local root="$1"
+		if [ ! -d "$root" ]; then
+			error "root path is not a directory: $root"
+			return 1
+		fi
+		local subpath="$2"
+		if [ -z "$subpath" ]; then
+			subpath="*.3gpp"
+		fi
+		local pattern="$3"
+		if [ -z "$pattern" ]; then
+			pattern="*.3gpp"
+		fi
+
+		c_fixup "$root" "$subpath" "$pattern" || return $?
+	;;
+
+	"print")
+		local root="$1"
+		if [ ! -d "$root" ]; then
+			error "root path is not a directory: $root"
+			return 1
+		fi
+		local pattern="$2"
+		if [ -z "$pattern" ]; then
+			pattern="*.3gpp"
+		fi
+		c_print "$root" "$pattern" || return $?
+	;;
+
+	*)
+		error "expected command, got '$cmd'"
+		return 1
+	;;
+	esac
+	return 0
+}
+
+_quanta_run_script main "$@"
+exit $?
+}
