@@ -98,7 +98,7 @@ f_make_entry() {
 
 	local entry="${L_ENTRY_TEMPLATE/__R_S__/$(f_time "$stime" "$L_FMT_CLOCK")}"
 	entry="${entry/__R_E__/$(f_time "$etime" "$L_FMT_CLOCK")}"
-	entry="${entry/__PATH__/$path}"
+	entry="${entry/__PATH__/$QUANTA_REC_REF_PREFIX$path}"
 
 	echo
 	echo -n "$entry"
@@ -199,7 +199,12 @@ c_print() {
 
 c_help() {
 	msg_local "usage: $_q_script_name command [arguments]"
-	msg_local "commands:
+	msg_local "
+environment variables:
+  QUANTA_REC_REF_PREFIX
+    prefix for entry url
+
+commands:
   pull <storage_root> [android_path=/sdcard/Recording] [dont_try_clean]
     pull recordings from attached Android device
 
