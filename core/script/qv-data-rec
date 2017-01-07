@@ -279,7 +279,7 @@ main() {
 		fi
 		local subpath="$2"
 		if [ -z "$subpath" ]; then
-			subpath="*.3gpp"
+			subpath="Recording"
 		fi
 		local pattern="$3"
 		if [ -z "$pattern" ]; then
