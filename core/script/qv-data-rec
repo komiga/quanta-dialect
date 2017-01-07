@@ -139,14 +139,14 @@ c_fixup() {
 
 	cp -f --preserve=all "$entries_file" "$root/entries_prev.q"
 	echo -n > "$entries_file"
+
 	pushd "$root" &> /dev/null
 	local num=0
-	find "$subpath/" -type f -name "$pattern" -print0 | sort -z | \
 	while IFS= read -r -d $'\0' f; do
 		f_fixup_do_file "$entries_file" "$f" || return $?
 		(( num++ ))
-	done
-	if (( num = 0 )); then
+	done < <(find "$subpath" -type f -name "$pattern" -print0 | sort -z)
+	if (( num == 0 )); then
 		msg_local "no files matched the pattern: $subpath/$pattern"
 	fi
 	popd &> /dev/null
@@ -190,10 +190,15 @@ c_print() {
 	fi
 	echo -n > "$entries_file"
 	msg_local "recordings:"
-	find "$root" -type f -name "$pattern" -print0 | sort -z | \
+
+	local num=0
 	while IFS= read -r -d $'\0' f; do
 		f_print_do_file "$entries_file" "$f" || return $?
-	done
+		(( num++ ))
+	done < <(find "$root" -type f -name "$pattern" -print0 | sort -z)
+	if (( num == 0 )); then
+		msg_local "no files matched the pattern: $pattern"
+	fi
 	return 0
 }
 
