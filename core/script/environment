@@ -24,7 +24,7 @@ _quanta_script_init_real() {
 	_q_script_name="$1"
 	if [ -z "$_q_script_name" ]; then
 		_q_script_name="${FUNCNAME[2]}"
-		if [[ $_q_script_name == main ]]; then
+		if [[ "$_q_script_name" == "main" ]]; then
 			_q_script_name=
 		fi
 	fi
@@ -68,6 +68,20 @@ _quanta_run_script() {
 	_quanta_script_init_real || return $?
 	$func "$@"
 	_quanta_script_exit $? || return $?
+	return 0
+}
+
+_quanta_mount_guard() {
+	local func=$1
+	shift
+
+	if ! is_vessel_mounted; then
+		error "vessel is not mounted"
+		return 1
+	fi
+	if [ ! -z "$func" ]; then
+		$func "$@" || return $?
+	fi
 	return 0
 }
 
