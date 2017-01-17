@@ -202,7 +202,8 @@ c_info() {
 }
 
 c_help() {
-	msg_local "usage: $_q_script_name command [arguments]"
+	msg_local "usage: $_q_script_name [command [arguments]]"
+	msg_local "if no command is given, the info command is called"
 	msg_local "commands:
   open [timespec]
     open a tracker
