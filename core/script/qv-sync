@@ -44,6 +44,6 @@ $output"
 	return $?
 }
 
-_quanta_run_script main "$@"
+_quanta_run_script _quanta_mount_guard main "$@"
 exit $?
 }

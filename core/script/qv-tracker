@@ -239,10 +239,12 @@ main() {
 	;;
 
 	"info")
+		_quanta_mount_guard || return $?
 		c_info
 	;;
 
 	"open")
+		_quanta_mount_guard || return $?
 		local t="$@"
 		if [ -z "$t" ]; then
 			t="$(f_time_active)"
@@ -256,6 +258,7 @@ main() {
 			error "expected timespec argument"
 			return 1
 		fi
+		_quanta_mount_guard || return $?
 		c_set "$t" || return $?
 		c_open "$t" || return $?
 	;;
@@ -266,6 +269,7 @@ main() {
 			error "expected pattern argument"
 			return 1
 		fi
+		_quanta_mount_guard || return $?
 		c_grep "${cmd: -1}" "$pattern" "" || return $?
 	;;
 
@@ -281,6 +285,7 @@ main() {
 			error "expected pattern argument"
 			return 1
 		fi
+		_quanta_mount_guard || return $?
 		c_grep_last "${cmd: -1}" "$pattern" "$num_months" || return $?
 	;;
 
@@ -290,6 +295,7 @@ main() {
 			error "expected pattern argument"
 			return 1
 		fi
+		_quanta_mount_guard || return $?
 		c_grep_last "${cmd: -1}" "$pattern" 2 || return $?
 	;;
 

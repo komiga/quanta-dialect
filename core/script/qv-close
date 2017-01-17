@@ -4,11 +4,6 @@ source "$(dirname "$(readlink -f "$0")")/environment"
 
 {
 main() {
-	if ! is_vessel_mounted; then
-		set_logging_enabled false
-		error "vessel is not mounted"
-		return 1
-	fi
 	"$QUANTA_CORE_SCRIPT/qv-sync" true || return $?
 
 	msg "closing"
@@ -16,6 +11,6 @@ main() {
 	return 0
 }
 
-_quanta_run_script main "$@"
+_quanta_run_script _quanta_mount_guard main "$@"
 exit $?
 }

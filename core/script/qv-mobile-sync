@@ -8,7 +8,6 @@ L_PATH_REMOTE="/sdcard/struct/quanta/$L_FILENAME"
 L_PATH_LOCAL="$QUANTA_VESSEL_DATA/mobile/$L_FILENAME"
 
 main() {
-
 	msg "syncing mobile (quick)"
 	adb shell am broadcast \
 		-p "com.komiga.quantamobile" \
@@ -33,6 +32,6 @@ main() {
 	return $?
 }
 
-_quanta_run_script main "$@"
+_quanta_run_script _quanta_mount_guard main "$@"
 exit $?
 }
