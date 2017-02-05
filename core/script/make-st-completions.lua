@@ -15,8 +15,43 @@ function json_value(name, value)
 	return quote(name) .. ": " .. quote(value)
 end
 
-function make_action(trigger, entry)
-	return {t = trigger, e = entry}
+function reduce_content(...)
+	local e = ""
+	for _, p in ipairs({...}) do
+		if type(p) == "string" then
+			e = e .. p
+		elseif type(p) == "table" then
+			e = e .. p()
+		else
+			error(string.format(
+				"unexpected action content part (of type %s): %s",
+				type(p), tostring(p)
+			))
+		end
+	end
+	return e
+end
+
+-- string, function | (string | Action)*
+function make_action(trigger, ...)
+	local a = {t = trigger, e = ""}
+	setmetatable(a, a)
+	_G.AL[trigger] = a
+
+	local parts = {...}
+	if #parts == 1 and type(parts[1]) == "function" then
+		a.f = parts[1]
+		a.__call = function(_, ...)
+			return reduce_content(a.f(...))
+		end
+		a.e = a()
+	else
+		a.__call = function()
+			return a.e
+		end
+		a.e = reduce_content(...)
+	end
+	return a
 end
 
 function transform_template(tpl)
@@ -45,6 +80,7 @@ function transform_template(tpl)
 end
 
 function read_actions(path)
+	_G.AL = {}
 	local actions = dofile(path) or {}
 	for _, action in pairs(actions) do
 		assert(action.t ~= nil and action.t ~= "")
@@ -61,6 +97,7 @@ function read_actions(path)
 		end
 		action.e = transform_template(action.e)
 	end
+	_G.AL = nil
 	return actions
 end
 
