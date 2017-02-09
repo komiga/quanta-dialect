@@ -223,7 +223,7 @@ function(self, parent, options, params)
 			Tool.log("local:")
 			for _, unit in ipairs(t.local_units.composition.items) do
 				resolve_and_mark(resolver, unit)
-				Bio.normalize_unit(unit)
+				Bio.normalize(unit)
 				local text = O.write_text_string(unit:to_object(obj), true)
 				text = string.gsub(text, "\t", "  ")
 				text = string.gsub(text, "\n", "\n")

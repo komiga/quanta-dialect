@@ -264,20 +264,15 @@ local function normalize_unit_impl(unit, outer)
 	end
 end
 
-function M.normalize_unit(unit, outer)
+function M.normalize(unit, outer)
+	if not U.is_instance(unit, Unit) then
+		U.assert(false, "unrecognized type")
+	end
 	if outer then
 		outer = outer:make_copy()
 		M.normalize_measurement(outer)
 	end
 	normalize_unit_impl(unit, outer)
-end
-
-function M.normalize(thing, outer)
-	if U.is_instance(thing, Unit) then
-		M.normalize_unit(thing, outer)
-	else
-		U.assert(false, "unrecognized type")
-	end
 end
 
 return M

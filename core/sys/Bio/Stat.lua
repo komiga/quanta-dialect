@@ -161,7 +161,7 @@ function M:_expand_entity(entity, variant, amount)
 		elseif not variant.composition:is_empty() then
 			composition = variant.composition
 			Bio.resolve_func(composition)
-			Bio.normalize_unit(composition, #composition.measurements == 0 and amount)
+			Bio.normalize(composition, #composition.measurements == 0 and amount)
 		end
 		if composition then
 			break

@@ -47,7 +47,7 @@ function M.Profile:normalize()
 	Bio.normalize_measurement(self.of)
 	self.composition.measurements = {self.of}
 	Bio.resolve_func(self.composition)
-	Bio.normalize_unit(self.composition, self.of)
+	Bio.normalize(self.composition, self.of)
 end
 
 M.Profile.t_body = Match.Tree({
