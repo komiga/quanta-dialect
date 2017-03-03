@@ -22,6 +22,6 @@ require "Tool.Account"
 require "Tool.Tracker"
 require "Tool.Bio"
 
-Vessel.setup_config(function()
+Vessel.setup_config(function(_ENV)
 	director = Dialect.director
 end)
