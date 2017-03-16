@@ -17,10 +17,11 @@ function entity_class_name(entity)
 	return entity.id or "Generic"
 end
 
-function date_to_string(date)
+function time_to_string(t, time_type, zoned)
 	local obj = O.create()
-	O.set_time_date(obj, date)
-	O.set_zoned(obj, false)
+	O.set_time_value(obj, t)
+	O.set_time_type(obj, time_type or O.TimeType.date)
+	O.set_zoned(obj, zoned or false)
 	return O.write_text_string(obj, true)
 end
 
@@ -119,7 +120,7 @@ function parse_dates(dates, options, params, read_modifier)
 						path = path
 					})
 				elseif not nonexist_passive then
-					Tool.log_error("%s does not exist", date_to_string(r_start))
+					Tool.log_error("%s does not exist", time_to_string(r_start))
 				end
 				dates_keyed[value] = true
 			end
@@ -205,7 +206,7 @@ function parse_dates(dates, options, params, read_modifier)
 
 	--[[U.print("%d dates:", #dates)
 	for _, p in ipairs(dates) do
-		U.print("  %s", date_to_string(p.date))
+		U.print("  %s", time_to_string(p.date))
 	end--]]
 
 	return true

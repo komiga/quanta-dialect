@@ -81,7 +81,7 @@ local function debug_searcher_wrapper(name, searcher)
 		U.print(
 			"%12s %s %s $%d$%d => %s %s",
 			name,
-			unit.scope and date_to_string(unit.scope) or "____-__-__",
+			unit.scope and time_to_string(unit.scope) or "____-__-__",
 			unit.id,
 			unit.source,
 			unit.sub_source,
@@ -141,7 +141,7 @@ function(self, parent, options, params)
 	local tracker_cache = {}
 	local function cache_tracker(t)
 		U.assert(not t.tracker)
-		t.date_str = date_to_string(t.date)
+		t.date_str = time_to_string(t.date)
 		t.tracker = Tracker()
 		tracker_cache[T.value(t.date)] = t
 

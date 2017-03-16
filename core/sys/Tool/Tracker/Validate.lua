@@ -53,7 +53,7 @@ function(self, parent, options, params)
 	local obj = O.create()
 	local tracker = Tracker()
 	for _, t in ipairs(dates) do
-		local date_str = date_to_string(t.date)
+		local date_str = time_to_string(t.date)
 		local success, msg, source_line = load_tracker(tracker, t.path, date_str)
 		if print_always or (not success and print_error) then
 			tracker:to_object(obj)

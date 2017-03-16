@@ -224,7 +224,7 @@ function(self, parent, options, params)
 	local tracker = Tracker()
 	local total = make_stats()
 	for _, t in ipairs(dates) do
-		local date_str = date_to_string(t.date)
+		local date_str = time_to_string(t.date)
 		local success, msg = load_tracker(tracker, t.path, date_str)
 		if not success then
 			return Tool.log_error(msg)
