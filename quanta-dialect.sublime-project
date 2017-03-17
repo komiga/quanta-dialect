@@ -1,0 +1,36 @@
+{
+	"folders": [
+		{
+			"name": "Root",
+			"path": ".",
+			"folder_exclude_patterns": [
+				"core",
+				"stub",
+				"user",
+				"example-data"
+			]
+		},
+		{
+			"name": "Core",
+			"path": "core",
+			"folder_exclude_patterns": [
+				"bin"
+			]
+		},
+		{
+			"name": "Stub",
+			"path": "stub"
+		},
+		{
+			"name": "User",
+			"path": "user"
+		},
+		{
+			"name": "Example data",
+			"path": "example-data"
+		}
+	],
+	"settings": {
+		"tab_size": 4
+	}
+}
