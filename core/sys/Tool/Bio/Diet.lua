@@ -174,7 +174,7 @@ function(self, parent, options, params)
 		return nil, nil, false
 	end
 
-	local not_found_modifier = Unit.Modifier("____NOT_FOUND____", nil, NotFoundModifier())
+	local not_found_modifier = Unit.Modifier("__nf__", nil, NotFoundModifier())
 	local function resolve_and_mark(resolver, unit)
 		local result = resolver:do_tree(unit)
 		for _, p in ipairs(result.not_found) do
