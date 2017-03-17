@@ -17,6 +17,11 @@ function entity_class_name(entity)
 	return entity.id or "Generic"
 end
 
+-- call iterator once
+function get_single_result(f, ...)
+	return f(...)
+end
+
 function time_to_string(t, time_type, zoned)
 	local obj = O.create()
 	O.set_time_value(obj, t)

@@ -15,12 +15,14 @@ require "Dialect.Entity.Account"
 -- tracker
 require "Dialect.Attachment.Units"
 require "Dialect.Bio.Nutrition"
+require "Dialect.Utility.HamsterEntry"
 
 -- tools
 require "Tool.Entity"
 require "Tool.Account"
 require "Tool.Tracker"
 require "Tool.Bio"
+require "Tool.Utility"
 
 Vessel.setup_config(function(_ENV)
 	director = Dialect.director
