@@ -17,7 +17,7 @@ function M.group(action)
 	end
 end
 
-M.Eat = Dialect.make_action(
+Dialect.make_action(
 	M, "Eat",
 function(class)
 
