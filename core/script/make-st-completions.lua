@@ -55,7 +55,7 @@ function make_action(trigger, ...)
 end
 
 function transform_template(tpl)
-	assert(tpl ~= nil and tpl ~= "")
+	assert(tpl ~= nil)
 	local has_newline = string.find(tpl, "\n", 1, true) ~= nil
 	tpl = string.gsub(tpl, "\\", "\\\\")
 	tpl = string.gsub(tpl, "\t", "\\t")
@@ -84,14 +84,6 @@ function read_actions(path)
 	local actions = dofile(path) or {}
 	for _, action in pairs(actions) do
 		assert(action.t ~= nil and action.t ~= "")
-		--[[if action.d == "" then
-			action.d = nil
-		end
-
-		local is_general = string.sub(action.t, -1) == "_"
-		if not action.d then
-			action.d = action.t .. (is_general and "*" or "")
-		end--]]
 		if string.sub(action.e, 1, 1) == "{" then
 			action.e = action.t .. (is_general and "@@" or "") .. action.e
 		end
@@ -103,15 +95,14 @@ end
 
 function write_completions(actions, path)
 	local stream = io.open(path, "w+")
-	stream:write(
-	[[{
+	stream:write([[{
 	"scope": "source.quanta",
 	"completions": [
 ]])
 	for i, action in ipairs(actions) do
 		stream:write(
 			"\t\t{" ..
-			json_value("trigger", action.t .. "\\tQ"--[[ .. action.d--]]) .. ", " ..
+			json_value("trigger", action.t .. "\\tQ") .. ", " ..
 			json_value("contents", action.e) ..
 			"}" .. (i < #actions and "," or "") .. "\n"
 		)
