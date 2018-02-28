@@ -55,29 +55,57 @@ end
 
 local function accumulate(tracker, total, action_selection)
 	local stats = make_stats()
+	local touched_group = {}
 	stats.num_days = 1
 	total.num_days = total.num_days + 1
 	stats.num_entries = #tracker.entries
 	total.num_entries = total.num_entries + stats.num_entries
 
-	for _, attachment in ipairs(tracker.attachments) do
-		accumulate_attachment(stats, attachment.id, attachment.id_hash, 1)
-	end
-	for _, entry in ipairs(tracker.entries) do
-		local entry_duration = T.value(entry.duration)
+	local function accumulate_entry(entry, num_head_active, entry_duration)
+		local num_active_actions = num_head_active
+		for _, action in ipairs(entry.actions) do
+			num_active_actions = num_active_actions + (action.passive and 0 or 1)
+		end
 		for i, action in ipairs(entry.actions) do
 			if not action_selection or action_selection[action.id_hash] then
-				local duration
-				if i ~= entry.primary_action then
-					duration = math.ceil((entry_duration * 0.25) / #entry.actions)
-				elseif #entry.actions > 1 then
+				local duration = entry_duration
+				if action.passive then
+				elseif i ~= entry.primary_action then
+					duration = math.ceil((entry_duration * 0.25) / num_active_actions)
+				elseif num_active_actions > 1 then
 					duration = math.floor(entry_duration * 0.75)
-				else
-					duration = entry_duration
 				end
 				accumulate_action(stats, action.id, action.id_hash, 1, duration)
 			end
 		end
+		return entry_duration
+	end
+
+	for _, attachment in ipairs(tracker.attachments) do
+		accumulate_attachment(stats, attachment.id, attachment.id_hash, 1)
+	end
+	for _, head_entry in ipairs(tracker.entries) do
+		if touched_group[head_entry.continue_id] then
+			goto l_continue
+		end
+		local group = tracker.entry_groups[head_entry.continue_id]
+		if group then
+			touched_group[head_entry.continue_id] = true
+		else
+			group = {head_entry}
+		end
+
+		local num_active_actions = 0
+		for _, action in ipairs(head_entry.actions) do
+			num_active_actions = num_active_actions + (action.passive and 0 or 1)
+		end
+		local total_duration = T.value(head_entry.duration)
+		for i = 2, #group do
+			local entry = group[i]
+			total_duration = total_duration + accumulate_entry(entry, num_active_actions, T.value(entry.duration))
+		end
+		accumulate_entry(head_entry, 0, total_duration)
+	::l_continue::
 	end
 
 	for id_hash, node in pairs(stats.attachments) do
