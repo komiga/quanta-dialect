@@ -59,12 +59,14 @@ function transform_template(tpl)
 	local indices = {}
 	local last_index = 1
 	local function next_open_index()
-		while last_index < #indices + 1 do
-			if not indices[last_index] then
+		while last_index < (#indices + 1) do
+			local has = indices[last_index]
+			last_index = last_index + 1
+			if not has then
 				break
 			end
-			last_index = last_index + 1
 		end
+		indices[last_index] = true
 		return last_index
 	end
 	local function snippet(index)
