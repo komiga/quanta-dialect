@@ -56,24 +56,42 @@ end
 
 function transform_template(tpl)
 	assert(tpl ~= nil)
+	local indices = {}
+	local last_index = 1
+	local function next_open_index()
+		while last_index < #indices + 1 do
+			if not indices[last_index] then
+				break
+			end
+			last_index = last_index + 1
+		end
+		return last_index
+	end
+	local function snippet(index)
+		if index == "" then
+			return "__QUANTA_ST_SNIPPET_ELEMENT__"
+		else
+			indices[tonumber(index)] = true
+			return index
+		end
+	end
+
 	local has_newline = string.find(tpl, "\n", 1, true) ~= nil
 	tpl = string.gsub(tpl, "\\", "\\\\")
 	tpl = string.gsub(tpl, "\t", "\\t")
 	tpl = string.gsub(tpl, "\n", "\\n") -- \\t
 	tpl = string.gsub(tpl, "%$", "\\\\$")
-	tpl = string.gsub(tpl, "@@@<<([^>]*)>>", function(content) -- `@@@{([^}]*)}` also works..
+	tpl = string.gsub(tpl, "@([0-9]*)@@<<([^>]*)>>", function(index, content) -- `@@@{([^}]*)}` also works..
 		content = string.gsub(content, "{", "\\\\{")
 		content = string.gsub(content, "}", "\\\\}")
-		return "${__QUANTA_ST_SNIPPET_ELEMENT__:" .. content .. "}"
+		return "${" .. snippet(index) .. ":" .. content .. "}"
 	end)
-	tpl = string.gsub(tpl, "@@", function()
-		return "$__QUANTA_ST_SNIPPET_ELEMENT__"
+	tpl = string.gsub(tpl, "@([0-9]*)@", function(index)
+		return "$" .. snippet(index)
 	end)
 
-	local tab_index = 0
 	tpl = string.gsub(tpl, "__QUANTA_ST_SNIPPET_ELEMENT__", function()
-		tab_index = tab_index + 1
-		return tab_index
+		return next_open_index()
 	end)
 	tpl = string.gsub(tpl, '"', '\\"')
 	return tpl--[[ .. "\\n"--]]--[[ .. (has_newline and "\\t" or "")--]] .. "$0"
