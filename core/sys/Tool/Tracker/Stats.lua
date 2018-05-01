@@ -255,6 +255,7 @@ function(self, parent, options, params)
 		local date_str = time_to_string(t.date)
 		local success, msg = load_tracker(tracker, t.path, date_str)
 		if not success then
+			msg, _ = string.gsub(msg, "%%", "%%%%")
 			return Tool.log_error(msg)
 		end
 
