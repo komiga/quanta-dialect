@@ -10,8 +10,8 @@ L_PATH_LOCAL="$QUANTA_VESSEL_DATA/mobile/$L_FILENAME"
 main() {
 	msg "syncing mobile (quick)"
 	adb shell am broadcast \
-		-p "com.komiga.quantamobile" \
-		-a "com.komiga.quantamobile.bridge.QUICK_EXPORT" \
+		-p "com.komiga.quanta" \
+		-a "com.komiga.quanta.bridge.QUICK_EXPORT" \
 		--ez "clear" true \
 	> /dev/null
 	if [ $? != 0 ]; then
