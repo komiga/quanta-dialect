@@ -28,6 +28,15 @@ main() {
 		return 3
 	fi
 
+	adb shell am broadcast \
+		-p "com.komiga.quanta" \
+		-a "com.komiga.quanta.bridge.DISCONNECT_REMOTE" \
+	> /dev/null
+	if [ $? != 0 ]; then
+		warning "failed to disconnect remote"
+		return 2
+	fi
+
 	sbt2 "$L_PATH_LOCAL:3"
 	return $?
 }
