@@ -11,7 +11,7 @@ main() {
 	msg "syncing mobile (quick)"
 	adb shell am broadcast \
 		-p "com.komiga.quanta" \
-		-a "com.komiga.quanta.bridge.QUICK_EXPORT" \
+		-a "com.komiga.quanta.bridge.EXPORT_QUICK" \
 		--ez "clear" true \
 	> /dev/null
 	if [ $? != 0 ]; then
@@ -30,7 +30,7 @@ main() {
 
 	adb shell am broadcast \
 		-p "com.komiga.quanta" \
-		-a "com.komiga.quanta.bridge.DISCONNECT_REMOTE" \
+		-a "com.komiga.quanta.bridge.REMOTE_DISCONNECT" \
 	> /dev/null
 	if [ $? != 0 ]; then
 		warning "failed to disconnect remote"
