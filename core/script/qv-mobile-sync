@@ -6,6 +6,7 @@ source "$(dirname "$(readlink -f "$0")")/environment"
 L_FILENAME="qm_quick.q"
 L_PATH_REMOTE="/sdcard/struct/quanta/$L_FILENAME"
 L_PATH_LOCAL="$QUANTA_VESSEL_DATA/mobile/$L_FILENAME"
+L_KEEP_COUNT=10
 
 main() {
 	msg "syncing mobile (quick)"
@@ -19,13 +20,32 @@ main() {
 		return 2
 	fi
 
+	local keep_stub="${L_PATH_LOCAL%.*}"
+	local keep_tmp="$keep_stub-tmp.q"
+	cp "$L_PATH_LOCAL" "$keep_tmp"
+
 	adb pull \
 		"$L_PATH_REMOTE" \
 		"$L_PATH_LOCAL" \
-		> /dev/null
+	> /dev/null
 	if [ $? != 0 ]; then
 		error "pull failed"
+		rm "$keep_tmp"
 		return 3
+	fi
+
+	if [ -f "$keep_stub-$L_KEEP_COUNT.q" ]; then
+		rm "$keep_stub-$L_KEEP_COUNT.q"
+	fi
+	for ((i=L_KEEP_COUNT;i>=1;i--)); do
+		if [ -f "$keep_stub-$i.q" ]; then
+			mv "$keep_stub-$i.q" "$keep_stub-$((i+1)).q"
+		fi
+	done
+	if [ $L_KEEP_COUNT > 0 ]; then
+		mv "$keep_tmp" "$keep_stub-1.q"
+	else
+		rm "$keep_tmp"
 	fi
 
 	adb shell am broadcast \
@@ -34,7 +54,6 @@ main() {
 	> /dev/null
 	if [ $? != 0 ]; then
 		warning "failed to disconnect remote"
-		return 2
 	fi
 
 	sbt2 "$L_PATH_LOCAL:3"
