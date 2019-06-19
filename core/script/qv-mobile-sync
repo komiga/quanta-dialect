@@ -37,7 +37,7 @@ main() {
 	if [ -f "$keep_stub-$L_KEEP_COUNT.q" ]; then
 		rm "$keep_stub-$L_KEEP_COUNT.q"
 	fi
-	for ((i=L_KEEP_COUNT;i>=1;i--)); do
+	for ((i=L_KEEP_COUNT-1; i>=1; i--)); do
 		if [ -f "$keep_stub-$i.q" ]; then
 			mv "$keep_stub-$i.q" "$keep_stub-$((i+1)).q"
 		fi
