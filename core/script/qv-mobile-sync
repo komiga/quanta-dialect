@@ -42,7 +42,7 @@ main() {
 			mv "$keep_stub-$i.q" "$keep_stub-$((i+1)).q"
 		fi
 	done
-	if [ $L_KEEP_COUNT > 0 ]; then
+	if (( L_KEEP_COUNT > 0 )); then
 		mv "$keep_tmp" "$keep_stub-1.q"
 	else
 		rm "$keep_tmp"
