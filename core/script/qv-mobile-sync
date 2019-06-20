@@ -6,9 +6,13 @@ source "$(dirname "$(readlink -f "$0")")/environment"
 L_FILENAME="qm_quick.q"
 L_PATH_REMOTE="/sdcard/struct/quanta/$L_FILENAME"
 L_PATH_LOCAL="$QUANTA_VESSEL_DATA/mobile/$L_FILENAME"
+L_PATH_SYNC="${L_PATH_LOCAL%.*}-sync.q"
+L_PATH_HASH="${L_PATH_LOCAL%.*}.hash"
 L_KEEP_COUNT=10
 
 main() {
+	local force="$1"
+
 	msg "syncing mobile (quick)"
 	adb shell am broadcast \
 		-p "com.komiga.quanta" \
@@ -20,20 +24,30 @@ main() {
 		return 2
 	fi
 
-	local keep_stub="${L_PATH_LOCAL%.*}"
-	local keep_tmp="$keep_stub-tmp.q"
-	cp "$L_PATH_LOCAL" "$keep_tmp"
-
 	adb pull \
 		"$L_PATH_REMOTE" \
-		"$L_PATH_LOCAL" \
+		"$L_PATH_SYNC" \
 	> /dev/null
 	if [ $? != 0 ]; then
 		error "pull failed"
-		rm "$keep_tmp"
 		return 3
 	fi
 
+	if [ -f "$L_PATH_HASH" ]; then
+		sha256sum --quiet --check "$L_PATH_HASH"
+		if [ $? == 0 ]; then
+			if [ -z "$force" ]; then
+				msg "already synced"
+				rm "$L_PATH_SYNC"
+				return 4
+			else
+				msg "already synced, but going ahead as instructed"
+			fi
+		fi
+	fi
+	sha256sum "$L_PATH_SYNC" > "$L_PATH_HASH"
+
+	local keep_stub="${L_PATH_LOCAL%.*}"
 	if [ -f "$keep_stub-$L_KEEP_COUNT.q" ]; then
 		rm "$keep_stub-$L_KEEP_COUNT.q"
 	fi
@@ -42,11 +56,13 @@ main() {
 			mv "$keep_stub-$i.q" "$keep_stub-$((i+1)).q"
 		fi
 	done
+
 	if (( L_KEEP_COUNT > 0 )); then
-		mv "$keep_tmp" "$keep_stub-1.q"
+		mv "$L_PATH_LOCAL" "$keep_stub-1.q"
 	else
-		rm "$keep_tmp"
+		rm "$L_PATH_LOCAL"
 	fi
+	mv "$L_PATH_SYNC" "$L_PATH_LOCAL"
 
 	adb shell am broadcast \
 		-p "com.komiga.quanta" \
