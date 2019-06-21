@@ -34,7 +34,7 @@ main() {
 	fi
 
 	if [ -f "$L_PATH_HASH" ]; then
-		sha256sum --quiet --check "$L_PATH_HASH"
+		sha256sum --quiet --check "$L_PATH_HASH" &> /dev/null
 		if [ $? == 0 ]; then
 			if [ -z "$force" ]; then
 				msg "already synced"
