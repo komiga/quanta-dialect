@@ -37,7 +37,8 @@ main() {
 			echo -n "$output" | \
 			sed -e 's|deleting|  ¡¡ DELETING !!|g' \
 			-e '/^  sys\/\.git.*/d' \
-			-e '/^  data\/mobile\/qm_quick\-.*/d'
+			-e '/^  data\/mobile\/qm_quick\-.*/d' \
+			-e '/^  data\/mobile\/.*\.hash/d'
 		)
 		msg "files:
 $output"
