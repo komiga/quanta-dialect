@@ -1,0 +1,32 @@
+#!/bin/bash
+
+source "$(dirname "$(readlink -f "$0")")/environment"
+
+{
+
+main() {
+	local state="$1"
+	local cmd="REMOTE_CONNECT"
+
+	if [ "$state" != 0 ] && [ "$state" != "false" ]; then
+		msg "connecting to remote"
+	else
+		cmd="REMOTE_DISCONNECT"
+		msg "disconnecting from remote"
+	fi
+
+	adb shell am broadcast \
+		-p "com.komiga.quanta" \
+		-a "com.komiga.quanta.bridge.$cmd" \
+	> /dev/null
+	if [ $? != 0 ]; then
+		error "command failed"
+		return 1
+	fi
+
+	return $?
+}
+
+_quanta_run_script _quanta_mount_guard main "$@"
+exit $?
+}
