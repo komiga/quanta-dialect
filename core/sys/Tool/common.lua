@@ -184,11 +184,11 @@ function parse_dates(dates, options, params, read_modifier)
 				return Tool.log_error("parameter not recognized: %s", p.value)
 			end
 		elseif O.is_expression(obj) then
-			if O.num_children(obj) ~= 2 then
+			if O.num_operands(obj) ~= 2 then
 				return Tool.log_error("invalid date range: %s", p.value)
 			end
-			local r_start_obj = O.child_at(obj, 1)
-			local r_end_obj = O.child_at(obj, 2)
+			local r_start_obj = O.operand_at(obj, 1)
+			local r_end_obj = O.operand_at(obj, 2)
 			if O.op(r_end_obj) ~= O.Operator.sub then
 				return Tool.log_error("expression is not a range: %s", p.value)
 			end
