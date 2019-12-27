@@ -127,7 +127,7 @@ c_open() {
 	local slug=$(f_time_slug "$t")
 	msg "opening $slug"
 	local line=$(wc -l "$p" | cut -d " " -f 1 2> /dev/null)
-	sbt2 "$p:$line"
+	sbt2 "$p:$line" &> /dev/null
 	return 0
 }
 

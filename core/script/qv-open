@@ -8,7 +8,7 @@ main() {
 	"$QUANTA_CORE_SCRIPT/qv-sync" || return $?
 
 	msg "opening Sublime project"
-	sbt2 --project "$QUANTA_VESSEL_SUBLIME/project.sublime-project" || return $?
+	sbt2 --project "$QUANTA_VESSEL_SUBLIME/project.sublime-project" &> /dev/null || return $?
 	#"$QUANTA_CORE_SCRIPT/qv-tracker" open || return $?
 	return 0
 }

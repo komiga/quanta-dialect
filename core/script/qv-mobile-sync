@@ -72,7 +72,7 @@ main() {
 		warning "failed to disconnect remote"
 	fi
 
-	sbt2 "$L_PATH_LOCAL:3"
+	sbt2 "$L_PATH_LOCAL:3" &> /dev/null
 	return $?
 }
 
