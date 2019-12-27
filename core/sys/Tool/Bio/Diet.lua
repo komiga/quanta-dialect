@@ -109,6 +109,8 @@ diet [ <date-or-range> [...] ]
   calculate nutrient intake stats
 
   -d: debug mode
+  -s: summary
+  -c: clean mode; don't add `__nf__` modifiers to not-found entity references
 ]=],
 function(self, parent, options, params)
 	local function read_modifier(p)
@@ -117,6 +119,8 @@ function(self, parent, options, params)
 			searcher_wrapper = debug_searcher_wrapper
 		elseif p.name == "-s" then
 			self.data.summary = true
+		elseif p.name == "-c" then
+			self.data.clean = true
 		else
 			return false
 		end
@@ -177,16 +181,18 @@ function(self, parent, options, params)
 	local not_found_modifier = Unit.Modifier("__nf__", nil, NotFoundModifier())
 	local function resolve_and_mark(resolver, unit)
 		local result = resolver:do_tree(unit)
-		for _, p in ipairs(result.not_found) do
-			local already_marked = false
-			for _, m in ipairs(p.unit.modifiers) do
-				if U.is_instance(m.data, NotFoundModifier) then
-					already_marked = true
-					break
+		if not self.data.clean then
+			for _, p in ipairs(result.not_found) do
+				local already_marked = false
+				for _, m in ipairs(p.unit.modifiers) do
+					if U.is_instance(m.data, NotFoundModifier) then
+						already_marked = true
+						break
+					end
 				end
-			end
-			if not already_marked then
-				table.insert(p.unit.modifiers, not_found_modifier)
+				if not already_marked then
+					table.insert(p.unit.modifiers, not_found_modifier)
+				end
 			end
 		end
 		return result
@@ -275,6 +281,7 @@ command.auto_read_options = false
 command.default_data = {
 	debug = false,
 	summary = false,
+	clean = false,
 }
 
 return command
