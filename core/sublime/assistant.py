@@ -4,12 +4,12 @@ import time
 
 # , tags = {%(e_tags)s}, rel_id = %(e_rel_id)s
 ENTRY_TEMPLATE = '''
-Entry%(e_entry_tags)s{range = ${2:%(e_range_begin)s} - ${3:%(e_range_end)s}, continue_id = ${4:%(e_continue_id)s}%(e_content)s};
+%(e_entry_type)s%(e_entry_tags)s{range = ${2:%(e_range_begin)s} - ${3:%(e_range_end)s}, continue_id = ${4:%(e_continue_id)s}%(e_content)s};
 '''
 
 # , tags = {%(e_tags)s}, rel_id = %(e_rel_id)s
 ENTRY_TEMPLATE_SC = '''
-Entry%(e_entry_tags)s{range = %(e_range_begin)s - %(e_range_end)s, continue_id = %(e_continue_id)s%(e_content)s};
+%(e_entry_type)s%(e_entry_tags)s{range = %(e_range_begin)s - %(e_range_end)s, continue_id = %(e_continue_id)s%(e_content)s};
 '''
 
 ENTRY_ACTIONS = ''', actions = {
@@ -23,6 +23,7 @@ class QuantaNewTrackerEntryCommand(sublime_plugin.TextCommand):
 		short_circuit = False,
 		content_selected = False,
 		at_end = False,
+		e_entry_type = "Entry",
 		e_entry_tags = "",
 		e_range_begin = "auto",
 		e_range_end = "ENEXT",
