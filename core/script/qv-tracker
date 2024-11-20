@@ -75,7 +75,7 @@ f_create_tracker() {
 			error "failed to create path to $slug"
 			return 1
 		fi
-		cp -nT "$L_PATH_TEMPLATE" "$p"
+		cp --update=none -T "$L_PATH_TEMPLATE" "$p"
 		if [ $? != 0 ]; then
 			error "failed to copy template to $slug"
 			return 1
